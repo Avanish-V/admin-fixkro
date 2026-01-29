@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -15,62 +15,72 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Pencil,
-  Trash2,
-  Power,
-  Wrench,
-  Refrigerator,
-  Tv,
-  Waves,
-  Wind,
-  Zap,
-} from "lucide-react";
+import { Pencil, Trash2, Power, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const iconMap: Record<string, React.ElementType> = {
-  wrench: Wrench,
-  refrigerator: Refrigerator,
-  tv: Tv,
-  waves: Waves,
-  wind: Wind,
-  zap: Zap,
-};
 
 interface Category {
   id: string;
   title: string;
-  icon: string;
+  iconSvg: string;
   status: "active" | "inactive";
   productsCount: number;
 }
 
 const initialCategories: Category[] = [
-  { id: "1", title: "Air Conditioner", icon: "wind", status: "active", productsCount: 12 },
-  { id: "2", title: "Refrigerator", icon: "refrigerator", status: "active", productsCount: 8 },
-  { id: "3", title: "Washing Machine", icon: "waves", status: "active", productsCount: 15 },
-  { id: "4", title: "Television", icon: "tv", status: "inactive", productsCount: 6 },
-  { id: "5", title: "Microwave", icon: "zap", status: "active", productsCount: 4 },
-  { id: "6", title: "General Repairs", icon: "wrench", status: "active", productsCount: 20 },
+  { id: "1", title: "Air Conditioner", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>', status: "active", productsCount: 12 },
+  { id: "2", title: "Refrigerator", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg>', status: "active", productsCount: 8 },
+  { id: "3", title: "Washing Machine", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>', status: "active", productsCount: 15 },
+  { id: "4", title: "Television", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>', status: "inactive", productsCount: 6 },
+  { id: "5", title: "Microwave", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', status: "active", productsCount: 4 },
 ];
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ title: "", icon: "wrench" });
+  const [formData, setFormData] = useState({ title: "", iconSvg: "" });
+  const [svgPreview, setSvgPreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleCreate = () => {
     setEditingCategory(null);
-    setFormData({ title: "", icon: "wrench" });
+    setFormData({ title: "", iconSvg: "" });
+    setSvgPreview("");
     setIsDialogOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    setFormData({ title: category.title, icon: category.icon });
+    setFormData({ title: category.title, iconSvg: category.iconSvg });
+    setSvgPreview(category.iconSvg);
     setIsDialogOpen(true);
+  };
+
+  const handleSvgUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "image/svg+xml") {
+      toast({ title: "Error", description: "Please upload an SVG file", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const svgContent = e.target?.result as string;
+      setFormData({ ...formData, iconSvg: svgContent });
+      setSvgPreview(svgContent);
+    };
+    reader.readAsText(file);
+  };
+
+  const clearSvg = () => {
+    setFormData({ ...formData, iconSvg: "" });
+    setSvgPreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSave = () => {
@@ -79,10 +89,15 @@ const Categories = () => {
       return;
     }
 
+    if (!formData.iconSvg) {
+      toast({ title: "Error", description: "Please upload an SVG icon", variant: "destructive" });
+      return;
+    }
+
     if (editingCategory) {
       setCategories(categories.map(c => 
         c.id === editingCategory.id 
-          ? { ...c, title: formData.title, icon: formData.icon }
+          ? { ...c, title: formData.title, iconSvg: formData.iconSvg }
           : c
       ));
       toast({ title: "Success", description: "Category updated successfully" });
@@ -90,7 +105,7 @@ const Categories = () => {
       const newCategory: Category = {
         id: Date.now().toString(),
         title: formData.title,
-        icon: formData.icon,
+        iconSvg: formData.iconSvg,
         status: "active",
         productsCount: 0,
       };
@@ -117,14 +132,12 @@ const Categories = () => {
     {
       key: "icon",
       header: "Icon",
-      render: (item: Category) => {
-        const Icon = iconMap[item.icon] || Wrench;
-        return (
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-        );
-      },
+      render: (item: Category) => (
+        <div 
+          className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"
+          dangerouslySetInnerHTML={{ __html: item.iconSvg }}
+        />
+      ),
     },
     { key: "title", header: "Title" },
     { key: "productsCount", header: "Products" },
@@ -205,24 +218,47 @@ const Categories = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select Icon</Label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {Object.entries(iconMap).map(([key, Icon]) => (
-                      <motion.button
-                        key={key}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setFormData({ ...formData, icon: key })}
-                        className={`p-3 rounded-lg flex items-center justify-center transition-colors ${
-                          formData.icon === key
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary/50 text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </motion.button>
-                    ))}
+                  <Label>Upload SVG Icon</Label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".svg,image/svg+xml"
+                      onChange={handleSvgUpload}
+                      className="hidden"
+                      id="svg-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="gap-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Choose SVG File
+                    </Button>
+                    
+                    {svgPreview && (
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-border"
+                          dangerouslySetInnerHTML={{ __html: svgPreview }}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={clearSvg}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upload an SVG file for the category icon
+                  </p>
                 </div>
               </div>
 
