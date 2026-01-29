@@ -21,6 +21,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Pencil, Trash2, Plus, X, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,9 +37,15 @@ interface ProductDescription {
   description: string;
 }
 
+interface Category {
+  id: string;
+  title: string;
+}
+
 interface Product {
   id: string;
   title: string;
+  categoryId: string;
   type: "REPAIR" | "MAINTENANCE";
   image: string;
   price: number;
@@ -39,10 +53,19 @@ interface Product {
   descriptionList: ProductDescription[];
 }
 
+const categories: Category[] = [
+  { id: "1", title: "Air Conditioner" },
+  { id: "2", title: "Refrigerator" },
+  { id: "3", title: "Washing Machine" },
+  { id: "4", title: "Television" },
+  { id: "5", title: "Microwave" },
+];
+
 const initialProducts: Product[] = [
   {
     id: "1",
     title: "AC Deep Cleaning",
+    categoryId: "1",
     type: "MAINTENANCE",
     image: "/placeholder.svg",
     price: 49.99,
@@ -55,6 +78,7 @@ const initialProducts: Product[] = [
   {
     id: "2",
     title: "Refrigerator Compressor Repair",
+    categoryId: "2",
     type: "REPAIR",
     image: "/placeholder.svg",
     price: 149.99,
@@ -67,6 +91,7 @@ const initialProducts: Product[] = [
   {
     id: "3",
     title: "Washing Machine Motor Repair",
+    categoryId: "3",
     type: "REPAIR",
     image: "/placeholder.svg",
     price: 89.99,
@@ -84,6 +109,7 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Omit<Product, "id">>({
     title: "",
+    categoryId: "",
     type: "REPAIR",
     image: "/placeholder.svg",
     price: 0,
@@ -92,10 +118,15 @@ const Products = () => {
   });
   const { toast } = useToast();
 
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.title || "Unknown";
+  };
+
   const handleCreate = () => {
     setEditingProduct(null);
     setFormData({
       title: "",
+      categoryId: "",
       type: "REPAIR",
       image: "/placeholder.svg",
       price: 0,
@@ -109,6 +140,7 @@ const Products = () => {
     setEditingProduct(product);
     setFormData({
       title: product.title,
+      categoryId: product.categoryId,
       type: product.type,
       image: product.image,
       price: product.price,
@@ -119,7 +151,7 @@ const Products = () => {
   };
 
   const handleSave = () => {
-    if (!formData.title || !formData.price) {
+    if (!formData.title || !formData.price || !formData.categoryId) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
@@ -170,61 +202,87 @@ const Products = () => {
         action={{ label: "Add Product", onClick: handleCreate }}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product, index) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="glass-card overflow-hidden group"
-          >
-            <div className="aspect-video bg-secondary/50 relative overflow-hidden">
-              <img
-                src={product.image}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-3 right-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  product.type === "REPAIR" 
-                    ? "bg-destructive/80 text-destructive-foreground" 
-                    : "bg-info/80 text-info-foreground"
-                }`}>
-                  {product.type}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-5">
-              <h3 className="text-lg font-semibold text-foreground mb-2">{product.title}</h3>
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{product.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-primary">${product.price}</span>
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleEdit(product)}
-                    className="p-2 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleDelete(product.id)}
-                    className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card overflow-hidden"
+      >
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Image</TableHead>
+              <TableHead className="text-muted-foreground">Title</TableHead>
+              <TableHead className="text-muted-foreground">Category</TableHead>
+              <TableHead className="text-muted-foreground">Type</TableHead>
+              <TableHead className="text-muted-foreground">Price</TableHead>
+              <TableHead className="text-muted-foreground">Description</TableHead>
+              <TableHead className="text-muted-foreground text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product, index) => (
+              <motion.tr
+                key={product.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="border-border hover:bg-secondary/30"
+              >
+                <TableCell>
+                  <div className="w-12 h-12 rounded-lg bg-secondary/50 overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium text-foreground">
+                  {product.title}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {getCategoryName(product.categoryId)}
+                </TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    product.type === "REPAIR" 
+                      ? "bg-destructive/10 text-destructive" 
+                      : "bg-info/10 text-info"
+                  }`}>
+                    {product.type}
+                  </span>
+                </TableCell>
+                <TableCell className="font-semibold text-primary">
+                  ${product.price}
+                </TableCell>
+                <TableCell className="text-muted-foreground max-w-xs truncate">
+                  {product.description}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleEdit(product)}
+                      className="p-2 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(product.id)}
+                      className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </TableCell>
+              </motion.tr>
+            ))}
+          </TableBody>
+        </Table>
+      </motion.div>
 
       <AnimatePresence>
         {isDialogOpen && (
@@ -251,6 +309,27 @@ const Products = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label>Category *</Label>
+                    <Select
+                      value={formData.categoryId}
+                      onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                    >
+                      <SelectTrigger className="bg-secondary/50">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label>Service Type *</Label>
                     <Select
                       value={formData.type}
@@ -267,9 +346,7 @@ const Products = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price ($) *</Label>
                     <Input
@@ -281,21 +358,21 @@ const Products = () => {
                       className="bg-secondary/50"
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="image">Image URL</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="image"
-                        placeholder="Image URL"
-                        value={formData.image}
-                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                        className="bg-secondary/50"
-                      />
-                      <Button variant="outline" size="icon" className="shrink-0">
-                        <ImageIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image">Image URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="image"
+                      placeholder="Image URL"
+                      value={formData.image}
+                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      className="bg-secondary/50"
+                    />
+                    <Button variant="outline" size="icon" className="shrink-0">
+                      <ImageIcon className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
 
