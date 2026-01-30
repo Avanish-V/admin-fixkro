@@ -1,24 +1,39 @@
 import { motion } from "framer-motion";
-import { AdminSidebar } from "./AdminSidebar";
+import { AdminSidebar, SidebarProvider, useSidebarCollapsed } from "./AdminSidebar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export const AdminLayout = ({ children }: AdminLayoutProps) => {
+const AdminLayoutContent = ({ children }: AdminLayoutProps) => {
+  const { collapsed } = useSidebarCollapsed();
+  
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex w-full">
       <AdminSidebar />
       <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="ml-[280px] min-h-screen"
+        initial={false}
+        animate={{ marginLeft: collapsed ? 80 : 280 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="flex-1 min-h-screen"
       >
-        <div className="p-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="p-8"
+        >
           {children}
-        </div>
+        </motion.div>
       </motion.main>
     </div>
+  );
+};
+
+export const AdminLayout = ({ children }: AdminLayoutProps) => {
+  return (
+    <SidebarProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </SidebarProvider>
   );
 };

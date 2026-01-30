@@ -11,8 +11,10 @@ import Products from "./pages/Products";
 import Offers from "./pages/Offers";
 import OfferForm from "./pages/OfferForm";
 import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
 import Transactions from "./pages/Transactions";
 import Professionals from "./pages/Professionals";
+import ProfessionalForm from "./pages/ProfessionalForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,8 +35,11 @@ const App = () => (
           <Route path="/offers/new" element={<OfferForm />} />
           <Route path="/offers/:id/edit" element={<OfferForm />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/professionals" element={<Professionals />} />
+          <Route path="/professionals/new" element={<ProfessionalForm />} />
+          <Route path="/professionals/:id/edit" element={<ProfessionalForm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

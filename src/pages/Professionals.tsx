@@ -1,20 +1,17 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Pencil,
   Trash2,
@@ -22,9 +19,6 @@ import {
   Phone,
   MapPin,
   Award,
-  Upload,
-  FileText,
-  User,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -49,8 +43,8 @@ const initialProfessionals: Professional[] = [
     id: "1",
     name: "Mike Thompson",
     photo: "/placeholder.svg",
-    mobile: "+1 234 567 890",
-    address: "123 Tech Street, Silicon Valley, CA",
+    mobile: "+91 98765 43210",
+    address: "123 Tech Street, Mumbai, MH",
     expertise: ["Air Conditioner", "Refrigerator", "HVAC"],
     documents: { aadharCard: "uploaded", photo: "uploaded" },
     status: "active",
@@ -61,8 +55,8 @@ const initialProfessionals: Professional[] = [
     id: "2",
     name: "David Wilson",
     photo: "/placeholder.svg",
-    mobile: "+1 345 678 901",
-    address: "456 Repair Ave, Los Angeles, CA",
+    mobile: "+91 87654 32109",
+    address: "456 Repair Ave, Delhi, DL",
     expertise: ["Washing Machine", "Dishwasher", "Dryer"],
     documents: { aadharCard: "uploaded", photo: "uploaded" },
     status: "active",
@@ -73,8 +67,8 @@ const initialProfessionals: Professional[] = [
     id: "3",
     name: "James Brown",
     photo: "/placeholder.svg",
-    mobile: "+1 456 789 012",
-    address: "789 Service Rd, Houston, TX",
+    mobile: "+91 76543 21098",
+    address: "789 Service Rd, Bangalore, KA",
     expertise: ["Television", "Microwave", "Electronics"],
     documents: { aadharCard: "pending", photo: "uploaded" },
     status: "inactive",
@@ -85,8 +79,8 @@ const initialProfessionals: Professional[] = [
     id: "4",
     name: "Sarah Lee",
     photo: "/placeholder.svg",
-    mobile: "+1 567 890 123",
-    address: "321 Fix St, Chicago, IL",
+    mobile: "+91 65432 10987",
+    address: "321 Fix St, Chennai, TN",
     expertise: ["Air Conditioner", "General Repairs"],
     documents: { aadharCard: "uploaded", photo: "uploaded" },
     status: "active",
@@ -97,70 +91,8 @@ const initialProfessionals: Professional[] = [
 
 const Professionals = () => {
   const [professionals, setProfessionals] = useState<Professional[]>(initialProfessionals);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProfessional, setEditingProfessional] = useState<Professional | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    mobile: "",
-    address: "",
-    expertise: "",
-  });
+  const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handleCreate = () => {
-    setEditingProfessional(null);
-    setFormData({ name: "", mobile: "", address: "", expertise: "" });
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (professional: Professional) => {
-    setEditingProfessional(professional);
-    setFormData({
-      name: professional.name,
-      mobile: professional.mobile,
-      address: professional.address,
-      expertise: professional.expertise.join(", "),
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!formData.name || !formData.mobile) {
-      toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
-      return;
-    }
-
-    if (editingProfessional) {
-      setProfessionals(professionals.map(p => 
-        p.id === editingProfessional.id 
-          ? { 
-              ...p, 
-              name: formData.name,
-              mobile: formData.mobile,
-              address: formData.address,
-              expertise: formData.expertise.split(",").map(e => e.trim()),
-            }
-          : p
-      ));
-      toast({ title: "Success", description: "Professional updated successfully" });
-    } else {
-      const newProfessional: Professional = {
-        id: Date.now().toString(),
-        name: formData.name,
-        photo: "/placeholder.svg",
-        mobile: formData.mobile,
-        address: formData.address,
-        expertise: formData.expertise.split(",").map(e => e.trim()),
-        documents: { aadharCard: "pending", photo: "pending" },
-        status: "inactive",
-        completedJobs: 0,
-        rating: 0,
-      };
-      setProfessionals([...professionals, newProfessional]);
-      toast({ title: "Success", description: "Professional added successfully" });
-    }
-    setIsDialogOpen(false);
-  };
 
   const handleDelete = (id: string) => {
     setProfessionals(professionals.filter(p => p.id !== id));
@@ -180,223 +112,128 @@ const Professionals = () => {
       <PageHeader
         title="Professionals"
         description="Manage service professionals and technicians"
-        action={{ label: "Add Professional", onClick: handleCreate }}
+        action={{ label: "Add Professional", onClick: () => navigate("/professionals/new") }}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {professionals.map((professional, index) => (
-          <motion.div
-            key={professional.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="glass-card p-6"
-          >
-            <div className="flex items-start gap-4">
-              {/* Photo */}
-              <div className="w-20 h-20 rounded-xl bg-secondary/50 overflow-hidden shrink-0">
-                <img
-                  src={professional.photo}
-                  alt={professional.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-foreground text-lg">{professional.name}</h3>
+      <div className="glass-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border/50 hover:bg-transparent">
+              <TableHead className="text-muted-foreground font-semibold">Professional</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Contact</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Expertise</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Stats</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Documents</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {professionals.map((professional, index) => (
+              <motion.tr
+                key={professional.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="table-row-hover border-border/30"
+              >
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-secondary/50 overflow-hidden shrink-0">
+                      <img
+                        src={professional.photo}
+                        alt={professional.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="font-medium text-foreground">{professional.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1 text-sm">
+                    <p className="flex items-center gap-1.5 text-muted-foreground">
+                      <Phone className="w-3.5 h-3.5" /> {professional.mobile}
+                    </p>
+                    <p className="flex items-center gap-1.5 text-muted-foreground truncate max-w-[180px]">
+                      <MapPin className="w-3.5 h-3.5 shrink-0" /> {professional.address}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {professional.expertise.slice(0, 2).map((exp) => (
+                      <span
+                        key={exp}
+                        className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium"
+                      >
+                        {exp}
+                      </span>
+                    ))}
+                    {professional.expertise.length > 2 && (
+                      <span className="px-2 py-0.5 rounded bg-secondary text-muted-foreground text-xs">
+                        +{professional.expertise.length - 2}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-warning" />
+                      <span className="font-medium">{professional.rating}</span>
+                    </div>
+                    <p className="text-muted-foreground">{professional.completedJobs} jobs</p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className={`text-sm ${
+                    professional.documents.aadharCard === "uploaded" 
+                      ? "text-success" 
+                      : "text-warning"
+                  }`}>
+                    {professional.documents.aadharCard === "uploaded" ? "Verified" : "Pending"}
+                  </span>
+                </TableCell>
+                <TableCell>
                   <StatusBadge status={professional.status} />
-                </div>
-
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <Phone className="w-4 h-4" /> {professional.mobile}
-                  </p>
-                  <p className="flex items-center gap-2 truncate">
-                    <MapPin className="w-4 h-4 shrink-0" /> {professional.address}
-                  </p>
-                </div>
-
-                {/* Expertise */}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {professional.expertise.map((exp) => (
-                    <span
-                      key={exp}
-                      className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium"
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-end gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => navigate(`/professionals/${professional.id}/edit`)}
+                      className="p-2 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                     >
-                      {exp}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/50">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-warning" />
-                    <span className="text-sm">
-                      <span className="font-semibold">{professional.rating}</span> rating
-                    </span>
+                      <Pencil className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleToggleStatus(professional.id)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        professional.status === "active"
+                          ? "bg-success/10 text-success hover:bg-success/20"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      <Power className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(professional.id)}
+                      className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
                   </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">{professional.completedJobs}</span>
-                    <span className="text-muted-foreground"> jobs</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <FileText className="w-4 h-4" />
-                    <span className={professional.documents.aadharCard === "uploaded" ? "text-success" : "text-warning"}>
-                      Docs: {professional.documents.aadharCard}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleEdit(professional)}
-                  className="p-2 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                >
-                  <Pencil className="w-4 h-4" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleToggleStatus(professional.id)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    professional.status === "active"
-                      ? "bg-success/10 text-success hover:bg-success/20"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <Power className="w-4 h-4" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleDelete(professional.id)}
-                  className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+                </TableCell>
+              </motion.tr>
+            ))}
+          </TableBody>
+        </Table>
       </div>
-
-      {/* Add/Edit Dialog */}
-      <AnimatePresence>
-        {isDialogOpen && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-card border-border max-w-xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProfessional ? "Edit Professional" : "Add Professional"}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingProfessional 
-                    ? "Update the professional's details" 
-                    : "Add a new service professional to your team"
-                  }
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-xl bg-secondary/50 flex items-center justify-center">
-                    <User className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <Button variant="outline" className="gap-2">
-                    <Upload className="w-4 h-4" /> Upload Photo
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Enter full name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="bg-secondary/50"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile Number *</Label>
-                    <Input
-                      id="mobile"
-                      placeholder="+1 234 567 890"
-                      value={formData.mobile}
-                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      className="bg-secondary/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    placeholder="Enter full address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="bg-secondary/50"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="expertise">Expertise (comma-separated)</Label>
-                  <Input
-                    id="expertise"
-                    placeholder="AC, Refrigerator, Washing Machine"
-                    value={formData.expertise}
-                    onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
-                    className="bg-secondary/50"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label>Documents</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-secondary/30 border border-dashed border-border">
-                      <div className="flex flex-col items-center gap-2 text-center">
-                        <FileText className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-sm font-medium">Aadhar Card</p>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Upload className="w-3 h-3" /> Upload
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="p-4 rounded-lg bg-secondary/30 border border-dashed border-border">
-                      <div className="flex flex-col items-center gap-2 text-center">
-                        <User className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-sm font-medium">ID Photo</p>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Upload className="w-3 h-3" /> Upload
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} className="btn-gradient">
-                  {editingProfessional ? "Update" : "Add Professional"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
     </AdminLayout>
   );
 };
