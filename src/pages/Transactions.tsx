@@ -27,7 +27,7 @@ const transactions: Transaction[] = [
     orderId: "ORD-001",
     customer: "John Doe",
     type: "credit",
-    amount: 49.99,
+    amount: 4199,
     method: "Credit Card",
     status: "completed",
     date: "2024-01-15",
@@ -37,8 +37,8 @@ const transactions: Transaction[] = [
     orderId: "ORD-002",
     customer: "Jane Smith",
     type: "credit",
-    amount: 149.99,
-    method: "PayPal",
+    amount: 12499,
+    method: "UPI",
     status: "completed",
     date: "2024-01-16",
   },
@@ -47,7 +47,7 @@ const transactions: Transaction[] = [
     orderId: "ORD-003",
     customer: "Bob Johnson",
     type: "credit",
-    amount: 89.99,
+    amount: 7499,
     method: "Credit Card",
     status: "pending",
     date: "2024-01-17",
@@ -57,7 +57,7 @@ const transactions: Transaction[] = [
     orderId: "ORD-004",
     customer: "Sarah Davis",
     type: "credit",
-    amount: 299.99,
+    amount: 24999,
     method: "Debit Card",
     status: "completed",
     date: "2024-01-18",
@@ -67,7 +67,7 @@ const transactions: Transaction[] = [
     orderId: "REF-001",
     customer: "Mike Wilson",
     type: "debit",
-    amount: 50.00,
+    amount: 4200,
     method: "Refund",
     status: "completed",
     date: "2024-01-19",
@@ -77,7 +77,7 @@ const transactions: Transaction[] = [
     orderId: "ORD-005",
     customer: "Emily Brown",
     type: "credit",
-    amount: 199.99,
+    amount: 16699,
     method: "Credit Card",
     status: "completed",
     date: "2024-01-20",
@@ -132,7 +132,7 @@ const Transactions = () => {
         <span className={`font-semibold ${
           item.type === "credit" ? "text-success" : "text-destructive"
         }`}>
-          {item.type === "credit" ? "+" : "-"}${item.amount.toFixed(2)}
+          {item.type === "credit" ? "+" : "-"}₹{item.amount.toLocaleString('en-IN')}
         </span>
       ),
     },
@@ -176,7 +176,7 @@ const Transactions = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold text-success">${totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-success">₹{totalRevenue.toLocaleString('en-IN')}</p>
             </div>
           </div>
         </motion.div>
@@ -193,7 +193,7 @@ const Transactions = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold text-warning">${pendingAmount.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-warning">₹{pendingAmount.toLocaleString('en-IN')}</p>
             </div>
           </div>
         </motion.div>

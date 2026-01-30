@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, createContext, useContext, ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,8 +33,35 @@ const navItems: NavItem[] = [
   { icon: Users, label: "Professionals", path: "/professionals" },
 ];
 
-export const AdminSidebar = () => {
+// Context for sidebar collapsed state
+interface SidebarContextType {
+  collapsed: boolean;
+  setCollapsed: (v: boolean) => void;
+}
+
+const SidebarContext = createContext<SidebarContextType>({ 
+  collapsed: false, 
+  setCollapsed: () => {} 
+});
+
+export const useSidebarCollapsed = () => useContext(SidebarContext);
+
+interface SidebarProviderProps {
+  children: ReactNode;
+}
+
+export const SidebarProvider = ({ children }: SidebarProviderProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  
+  return (
+    <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+};
+
+export const AdminSidebar = () => {
+  const { collapsed, setCollapsed } = useSidebarCollapsed();
   const location = useLocation();
 
   return (
@@ -73,7 +100,7 @@ export const AdminSidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
         {navItems.map((item, index) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
           return (
             <motion.div
               key={item.path}

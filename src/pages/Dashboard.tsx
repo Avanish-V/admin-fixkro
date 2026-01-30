@@ -36,11 +36,11 @@ const revenueData = [
 ];
 
 const recentOrders = [
-  { id: "ORD-001", customer: "John Doe", service: "AC Repair", status: "completed" as const, amount: "$150" },
-  { id: "ORD-002", customer: "Jane Smith", service: "Washing Machine", status: "assigned" as const, amount: "$200" },
-  { id: "ORD-003", customer: "Mike Johnson", service: "Refrigerator", status: "assigning" as const, amount: "$180" },
-  { id: "ORD-004", customer: "Sarah Wilson", service: "Microwave", status: "completed" as const, amount: "$80" },
-  { id: "ORD-005", customer: "Tom Brown", service: "Dishwasher", status: "pending" as const, amount: "$120" },
+  { id: "ORD-001", customer: "John Doe", service: "AC Repair", status: "completed" as const, amount: "₹12,500" },
+  { id: "ORD-002", customer: "Jane Smith", service: "Washing Machine", status: "assigned" as const, amount: "₹16,700" },
+  { id: "ORD-003", customer: "Mike Johnson", service: "Refrigerator", status: "assigning" as const, amount: "₹15,000" },
+  { id: "ORD-004", customer: "Sarah Wilson", service: "Microwave", status: "completed" as const, amount: "₹6,700" },
+  { id: "ORD-005", customer: "Tom Brown", service: "Dishwasher", status: "pending" as const, amount: "₹10,000" },
 ];
 
 const orderColumns = [
@@ -80,7 +80,7 @@ const Dashboard = () => {
           />
           <StatsCard
             title="Revenue"
-            value="$48,574"
+            value="₹40,47,800"
             change="+8.2% from last month"
             changeType="positive"
             icon={DollarSign}
