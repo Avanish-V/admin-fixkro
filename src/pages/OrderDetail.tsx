@@ -32,6 +32,7 @@ interface Order {
     address: string;
   };
   product: {
+    id: string;
     title: string;
     type: "REPAIR" | "MAINTENANCE";
     price: number;
@@ -62,7 +63,7 @@ const orders: Order[] = [
       email: "john@email.com",
       address: "123 Main St, Apt 4B, Mumbai, MH 400001",
     },
-    product: { title: "AC Deep Cleaning", type: "MAINTENANCE", price: 4199 },
+    product: { id: "PRD-001", title: "AC Deep Cleaning", type: "MAINTENANCE", price: 4199 },
     status: "completed",
     professional: "Mike Thompson",
     orderDate: "2024-01-15",
@@ -77,7 +78,7 @@ const orders: Order[] = [
       email: "jane@email.com",
       address: "456 Oak Ave, Suite 12, Delhi, DL 110001",
     },
-    product: { title: "Refrigerator Compressor Repair", type: "REPAIR", price: 12499 },
+    product: { id: "PRD-002", title: "Refrigerator Compressor Repair", type: "REPAIR", price: 12499 },
     status: "assigned",
     professional: "David Wilson",
     orderDate: "2024-01-16",
@@ -92,7 +93,7 @@ const orders: Order[] = [
       email: "bob@email.com",
       address: "789 Pine Rd, Bangalore, KA 560001",
     },
-    product: { title: "Washing Machine Motor Repair", type: "REPAIR", price: 7499 },
+    product: { id: "PRD-003", title: "Washing Machine Motor Repair", type: "REPAIR", price: 7499 },
     status: "assigning",
     professional: null,
     orderDate: "2024-01-17",
@@ -212,9 +213,17 @@ const OrderDetail = () => {
               <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
                 <Package className="w-5 h-5 text-primary" /> Service Details
               </h3>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/30">
-                <div>
-                  <p className="font-semibold text-lg text-foreground">{order.product.title}</p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Product ID</p>
+                  <p className="font-mono font-medium text-foreground">{order.product.id}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30 md:col-span-2">
+                  <p className="text-sm text-muted-foreground mb-1">Service Name</p>
+                  <p className="font-semibold text-foreground">{order.product.title}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Type</p>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                     order.product.type === "REPAIR" 
                       ? "bg-destructive/20 text-destructive" 
@@ -223,6 +232,9 @@ const OrderDetail = () => {
                     {order.product.type}
                   </span>
                 </div>
+              </div>
+              <div className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20">
+                <p className="text-sm text-muted-foreground mb-1">Service Amount</p>
                 <p className="text-3xl font-bold text-primary">₹{order.product.price.toLocaleString('en-IN')}</p>
               </div>
             </div>
