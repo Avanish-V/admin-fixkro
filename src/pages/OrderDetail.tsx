@@ -18,6 +18,7 @@ import {
   Package,
   Calendar,
   CreditCard,
+  Clock,
   UserCheck,
   Mail,
 } from "lucide-react";
@@ -38,6 +39,11 @@ interface Order {
   status: "assigning" | "assigned" | "completed";
   professional: string | null;
   orderDate: string;
+  schedule: {
+    date: string;
+    timeSlot: string;
+    notes: string;
+  };
   transaction: {
     id: string;
     method: string;
@@ -60,6 +66,7 @@ const orders: Order[] = [
     status: "completed",
     professional: "Mike Thompson",
     orderDate: "2024-01-15",
+    schedule: { date: "2024-01-18", timeSlot: "10:00 AM - 12:00 PM", notes: "Customer prefers morning slot" },
     transaction: { id: "TXN-001", method: "Credit Card", status: "Completed", amount: 4199 },
   },
   {
@@ -74,6 +81,7 @@ const orders: Order[] = [
     status: "assigned",
     professional: "David Wilson",
     orderDate: "2024-01-16",
+    schedule: { date: "2024-01-19", timeSlot: "02:00 PM - 04:00 PM", notes: "Ring doorbell on arrival" },
     transaction: { id: "TXN-002", method: "UPI", status: "Completed", amount: 12499 },
   },
   {
@@ -88,6 +96,7 @@ const orders: Order[] = [
     status: "assigning",
     professional: null,
     orderDate: "2024-01-17",
+    schedule: { date: "2024-01-20", timeSlot: "04:00 PM - 06:00 PM", notes: "Weekend preferred" },
     transaction: { id: "TXN-003", method: "Credit Card", status: "Pending", amount: 7499 },
   },
 ];
@@ -215,6 +224,27 @@ const OrderDetail = () => {
                   </span>
                 </div>
                 <p className="text-3xl font-bold text-primary">₹{order.product.price.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+
+            {/* Service Schedule */}
+            <div className="glass-card p-6">
+              <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+                <Clock className="w-5 h-5 text-primary" /> Service Schedule
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Scheduled Date</p>
+                  <p className="font-semibold text-foreground">{order.schedule.date}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Time Slot</p>
+                  <p className="font-semibold text-foreground">{order.schedule.timeSlot}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                  <p className="font-medium text-foreground">{order.schedule.notes}</p>
+                </div>
               </div>
             </div>
 
