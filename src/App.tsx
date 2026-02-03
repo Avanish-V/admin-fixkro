@@ -15,6 +15,7 @@ import OrderDetail from "./pages/OrderDetail";
 import Transactions from "./pages/Transactions";
 import Professionals from "./pages/Professionals";
 import ProfessionalForm from "./pages/ProfessionalForm";
+import Cities from "./pages/Cities";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/professionals" element={<Professionals />} />
           <Route path="/professionals/new" element={<ProfessionalForm />} />
           <Route path="/professionals/:id/edit" element={<ProfessionalForm />} />
+          <Route path="/cities" element={<Cities />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

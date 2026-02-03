@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   CreditCard,
   Users,
+  MapPin,
   ChevronLeft,
   ChevronRight,
   Wrench,
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { icon: ShoppingCart, label: "Orders", path: "/orders" },
   { icon: CreditCard, label: "Transactions", path: "/transactions" },
   { icon: Users, label: "Professionals", path: "/professionals" },
+  { icon: MapPin, label: "Cities", path: "/cities" },
 ];
 
 // Context for sidebar collapsed state
