@@ -29,7 +29,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, X, ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, X, ImageIcon, MapPin } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProductDescription {
@@ -51,7 +52,21 @@ interface Product {
   price: number;
   description: string;
   descriptionList: ProductDescription[];
+  availableCities: string[];
 }
+
+const availableCitiesList = [
+  "Mumbai",
+  "Delhi",
+  "Bangalore",
+  "Chennai",
+  "Hyderabad",
+  "Kolkata",
+  "Pune",
+  "Ahmedabad",
+  "Jaipur",
+  "Lucknow",
+];
 
 const categories: Category[] = [
   { id: "1", title: "Air Conditioner" },
@@ -68,12 +83,13 @@ const initialProducts: Product[] = [
     categoryId: "1",
     type: "MAINTENANCE",
     image: "/placeholder.svg",
-    price: 49.99,
+    price: 4199,
     description: "Complete AC cleaning service including filters and coils",
     descriptionList: [
       { title: "Filter Cleaning", description: "Remove and clean all filters" },
       { title: "Coil Cleaning", description: "Deep clean evaporator and condenser coils" },
     ],
+    availableCities: ["Mumbai", "Delhi", "Bangalore"],
   },
   {
     id: "2",
@@ -81,12 +97,13 @@ const initialProducts: Product[] = [
     categoryId: "2",
     type: "REPAIR",
     image: "/placeholder.svg",
-    price: 149.99,
+    price: 12499,
     description: "Expert compressor diagnosis and repair service",
     descriptionList: [
       { title: "Diagnosis", description: "Complete system analysis" },
       { title: "Repair", description: "Fix or replace faulty components" },
     ],
+    availableCities: ["Mumbai", "Pune", "Chennai"],
   },
   {
     id: "3",
@@ -94,12 +111,13 @@ const initialProducts: Product[] = [
     categoryId: "3",
     type: "REPAIR",
     image: "/placeholder.svg",
-    price: 89.99,
+    price: 7499,
     description: "Motor repair and replacement services",
     descriptionList: [
       { title: "Motor Check", description: "Test motor functionality" },
       { title: "Belt Replacement", description: "Replace worn belts if needed" },
     ],
+    availableCities: ["Delhi", "Hyderabad", "Kolkata"],
   },
 ];
 
@@ -115,6 +133,7 @@ const Products = () => {
     price: 0,
     description: "",
     descriptionList: [],
+    availableCities: [],
   });
   const { toast } = useToast();
 
@@ -132,6 +151,7 @@ const Products = () => {
       price: 0,
       description: "",
       descriptionList: [],
+      availableCities: [],
     });
     setIsDialogOpen(true);
   };
@@ -146,8 +166,18 @@ const Products = () => {
       price: product.price,
       description: product.description,
       descriptionList: [...product.descriptionList],
+      availableCities: [...product.availableCities],
     });
     setIsDialogOpen(true);
+  };
+
+  const toggleCity = (city: string) => {
+    setFormData(prev => ({
+      ...prev,
+      availableCities: prev.availableCities.includes(city)
+        ? prev.availableCities.filter(c => c !== city)
+        : [...prev.availableCities, city],
+    }));
   };
 
   const handleSave = () => {
@@ -215,7 +245,7 @@ const Products = () => {
               <TableHead className="text-muted-foreground">Category</TableHead>
               <TableHead className="text-muted-foreground">Type</TableHead>
               <TableHead className="text-muted-foreground">Price</TableHead>
-              <TableHead className="text-muted-foreground">Description</TableHead>
+              <TableHead className="text-muted-foreground">Available Cities</TableHead>
               <TableHead className="text-muted-foreground text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -253,10 +283,24 @@ const Products = () => {
                   </span>
                 </TableCell>
                 <TableCell className="font-semibold text-primary">
-                  ${product.price}
+                  ₹{product.price.toLocaleString('en-IN')}
                 </TableCell>
-                <TableCell className="text-muted-foreground max-w-xs truncate">
-                  {product.description}
+                <TableCell>
+                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {product.availableCities.slice(0, 3).map((city) => (
+                      <span
+                        key={city}
+                        className="px-2 py-0.5 rounded-full text-xs bg-secondary text-muted-foreground"
+                      >
+                        {city}
+                      </span>
+                    ))}
+                    {product.availableCities.length > 3 && (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary font-medium">
+                        +{product.availableCities.length - 3}
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -348,11 +392,11 @@ const Products = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price ($) *</Label>
+                    <Label htmlFor="price">Price (₹) *</Label>
                     <Input
                       id="price"
                       type="number"
-                      placeholder="0.00"
+                      placeholder="0"
                       value={formData.price || ""}
                       onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                       className="bg-secondary/50"
@@ -383,8 +427,35 @@ const Products = () => {
                     placeholder="Enter product description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="bg-secondary/50 min-h-[100px]"
+                    className="bg-secondary/50 min-h-[80px]"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Available Cities
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-lg bg-secondary/30">
+                    {availableCitiesList.map((city) => (
+                      <div
+                        key={city}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`city-${city}`}
+                          checked={formData.availableCities.includes(city)}
+                          onCheckedChange={() => toggleCity(city)}
+                        />
+                        <label
+                          htmlFor={`city-${city}`}
+                          className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {city}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
