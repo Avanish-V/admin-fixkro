@@ -29,8 +29,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, X, ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, X, ImageIcon, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductDescription {
   title: string;
@@ -106,6 +107,8 @@ const initialProducts: Product[] = [
 const Products = () => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Omit<Product, "id">>({
     title: "",
@@ -117,6 +120,11 @@ const Products = () => {
     descriptionList: [],
   });
   const { toast } = useToast();
+
+  const handleView = (product: Product) => {
+    setViewingProduct(product);
+    setIsViewDialogOpen(true);
+  };
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.title || "Unknown";
@@ -260,6 +268,14 @@ const Products = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleView(product)}
+                      className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -449,6 +465,111 @@ const Products = () => {
           </Dialog>
         )}
       </AnimatePresence>
+
+      {/* View Product Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Product Details</DialogTitle>
+            <DialogDescription>
+              View complete product information
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingProduct && (
+            <div className="space-y-6 py-4">
+              {/* Product Image & Basic Info */}
+              <div className="flex gap-6">
+                <div className="w-32 h-32 rounded-xl bg-secondary/50 overflow-hidden shrink-0">
+                  <img
+                    src={viewingProduct.image}
+                    alt={viewingProduct.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Product ID</p>
+                    <p className="font-mono text-sm text-foreground">#{viewingProduct.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Product Title</p>
+                    <p className="font-semibold text-lg text-foreground">{viewingProduct.title}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant={viewingProduct.type === "REPAIR" ? "destructive" : "default"}>
+                      {viewingProduct.type}
+                    </Badge>
+                    <Badge variant="outline">{getCategoryName(viewingProduct.categoryId)}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-1">Service Price</p>
+                <p className="text-2xl font-bold text-primary">
+                  ₹{viewingProduct.price.toLocaleString('en-IN')}
+                </p>
+              </div>
+
+              {/* Category & Type Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-xs text-muted-foreground mb-1">Category</p>
+                  <p className="font-medium text-foreground">{getCategoryName(viewingProduct.categoryId)}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30">
+                  <p className="text-xs text-muted-foreground mb-1">Service Type</p>
+                  <p className="font-medium text-foreground">{viewingProduct.type}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="p-4 rounded-xl bg-secondary/30">
+                <p className="text-xs text-muted-foreground mb-2">Description</p>
+                <p className="text-foreground">{viewingProduct.description}</p>
+              </div>
+
+              {/* Description List */}
+              {viewingProduct.descriptionList.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">Service Includes</p>
+                  <div className="space-y-2">
+                    {viewingProduct.descriptionList.map((item, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-secondary/30 flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium shrink-0">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{item.title}</p>
+                          <p className="text-sm text-muted-foreground">{item.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+              Close
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsViewDialogOpen(false);
+                if (viewingProduct) handleEdit(viewingProduct);
+              }} 
+              className="btn-gradient"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Product
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
