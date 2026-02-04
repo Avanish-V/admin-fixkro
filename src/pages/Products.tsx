@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, X, ImageIcon, Eye } from "lucide-react";
+import { Pencil, Trash2, Plus, X, ImageIcon, Eye, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -110,6 +110,7 @@ const Products = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [formData, setFormData] = useState<Omit<Product, "id">>({
     title: "",
     categoryId: "",
@@ -120,6 +121,10 @@ const Products = () => {
     descriptionList: [],
   });
   const { toast } = useToast();
+
+  const filteredProducts = selectedCategoryFilter === "all" 
+    ? products 
+    : products.filter(p => p.categoryId === selectedCategoryFilter);
 
   const handleView = (product: Product) => {
     setViewingProduct(product);
@@ -210,6 +215,42 @@ const Products = () => {
         action={{ label: "Add Product", onClick: handleCreate }}
       />
 
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <Select
+            value={selectedCategoryFilter}
+            onValueChange={setSelectedCategoryFilter}
+          >
+            <SelectTrigger className="w-[200px] bg-secondary/50">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedCategoryFilter !== "all" && (
+            <Badge variant="secondary" className="gap-1">
+              {getCategoryName(selectedCategoryFilter)}
+              <button 
+                onClick={() => setSelectedCategoryFilter("all")}
+                className="ml-1 hover:text-destructive"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredProducts.length} of {products.length} products
+        </p>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -228,7 +269,7 @@ const Products = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <motion.tr
                 key={product.id}
                 initial={{ opacity: 0, x: -20 }}
