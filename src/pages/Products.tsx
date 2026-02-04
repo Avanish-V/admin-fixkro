@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -14,14 +11,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -29,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, X, ImageIcon, Eye, Filter } from "lucide-react";
+import { Pencil, Trash2, X, Eye, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -105,81 +94,17 @@ const initialProducts: Product[] = [
 ];
 
 const Products = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
-  const [formData, setFormData] = useState<Omit<Product, "id">>({
-    title: "",
-    categoryId: "",
-    type: "REPAIR",
-    image: "/placeholder.svg",
-    price: 0,
-    description: "",
-    descriptionList: [],
-  });
   const { toast } = useToast();
 
   const filteredProducts = selectedCategoryFilter === "all" 
     ? products 
     : products.filter(p => p.categoryId === selectedCategoryFilter);
 
-  const handleView = (product: Product) => {
-    setViewingProduct(product);
-    setIsViewDialogOpen(true);
-  };
-
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.title || "Unknown";
-  };
-
-  const handleCreate = () => {
-    setEditingProduct(null);
-    setFormData({
-      title: "",
-      categoryId: "",
-      type: "REPAIR",
-      image: "/placeholder.svg",
-      price: 0,
-      description: "",
-      descriptionList: [],
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      title: product.title,
-      categoryId: product.categoryId,
-      type: product.type,
-      image: product.image,
-      price: product.price,
-      description: product.description,
-      descriptionList: [...product.descriptionList],
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!formData.title || !formData.price || !formData.categoryId) {
-      toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
-      return;
-    }
-
-    if (editingProduct) {
-      setProducts(products.map(p => 
-        p.id === editingProduct.id ? { ...formData, id: editingProduct.id } : p
-      ));
-      toast({ title: "Success", description: "Product updated successfully" });
-    } else {
-      const newProduct: Product = { ...formData, id: Date.now().toString() };
-      setProducts([...products, newProduct]);
-      toast({ title: "Success", description: "Product created successfully" });
-    }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = (id: string) => {
@@ -187,32 +112,12 @@ const Products = () => {
     toast({ title: "Deleted", description: "Product has been removed" });
   };
 
-  const addDescriptionItem = () => {
-    setFormData({
-      ...formData,
-      descriptionList: [...formData.descriptionList, { title: "", description: "" }],
-    });
-  };
-
-  const removeDescriptionItem = (index: number) => {
-    setFormData({
-      ...formData,
-      descriptionList: formData.descriptionList.filter((_, i) => i !== index),
-    });
-  };
-
-  const updateDescriptionItem = (index: number, field: keyof ProductDescription, value: string) => {
-    const newList = [...formData.descriptionList];
-    newList[index] = { ...newList[index], [field]: value };
-    setFormData({ ...formData, descriptionList: newList });
-  };
-
   return (
     <AdminLayout>
       <PageHeader
         title="Products"
         description="Manage your repair and maintenance services"
-        action={{ label: "Add Product", onClick: handleCreate }}
+        action={{ label: "Add Product", onClick: () => navigate("/products/new") }}
       />
 
       <div className="flex items-center justify-between gap-4 mb-4">
@@ -302,7 +207,7 @@ const Products = () => {
                   </span>
                 </TableCell>
                 <TableCell className="font-semibold text-primary">
-                  ${product.price}
+                  ₹{product.price}
                 </TableCell>
                 <TableCell className="text-muted-foreground max-w-xs truncate">
                   {product.description}
@@ -312,7 +217,7 @@ const Products = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => handleView(product)}
+                      onClick={() => navigate(`/products/${product.id}`)}
                       className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
@@ -320,7 +225,7 @@ const Products = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => handleEdit(product)}
+                      onClick={() => navigate(`/products/edit/${product.id}`)}
                       className="p-2 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                     >
                       <Pencil className="w-4 h-4" />
@@ -340,277 +245,6 @@ const Products = () => {
           </TableBody>
         </Table>
       </motion.div>
-
-      <AnimatePresence>
-        {isDialogOpen && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? "Edit Product" : "Create Product"}</DialogTitle>
-                <DialogDescription>
-                  {editingProduct ? "Update the product details" : "Add a new service product"}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Product Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="Enter product name"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="bg-secondary/50"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Category *</Label>
-                    <Select
-                      value={formData.categoryId}
-                      onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
-                    >
-                      <SelectTrigger className="bg-secondary/50">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Service Type *</Label>
-                    <Select
-                      value={formData.type}
-                      onValueChange={(value: "REPAIR" | "MAINTENANCE") => 
-                        setFormData({ ...formData, type: value })
-                      }
-                    >
-                      <SelectTrigger className="bg-secondary/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="REPAIR">Repair</SelectItem>
-                        <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price ($) *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      placeholder="0.00"
-                      value={formData.price || ""}
-                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                      className="bg-secondary/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="image">Image URL</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="image"
-                      placeholder="Image URL"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      className="bg-secondary/50"
-                    />
-                    <Button variant="outline" size="icon" className="shrink-0">
-                      <ImageIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Enter product description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="bg-secondary/50 min-h-[100px]"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>Description List</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addDescriptionItem}
-                      className="gap-1"
-                    >
-                      <Plus className="w-4 h-4" /> Add Item
-                    </Button>
-                  </div>
-
-                  {formData.descriptionList.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex gap-3 items-start p-3 rounded-lg bg-secondary/30"
-                    >
-                      <div className="flex-1 grid grid-cols-2 gap-3">
-                        <Input
-                          placeholder="Title"
-                          value={item.title}
-                          onChange={(e) => updateDescriptionItem(index, "title", e.target.value)}
-                          className="bg-secondary/50"
-                        />
-                        <Input
-                          placeholder="Description"
-                          value={item.description}
-                          onChange={(e) => updateDescriptionItem(index, "description", e.target.value)}
-                          className="bg-secondary/50"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeDescriptionItem(index)}
-                        className="text-destructive hover:bg-destructive/10 shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} className="btn-gradient">
-                  {editingProduct ? "Update" : "Create"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
-
-      {/* View Product Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Product Details</DialogTitle>
-            <DialogDescription>
-              View complete product information
-            </DialogDescription>
-          </DialogHeader>
-
-          {viewingProduct && (
-            <div className="space-y-6 py-4">
-              {/* Product Image & Basic Info */}
-              <div className="flex gap-6">
-                <div className="w-32 h-32 rounded-xl bg-secondary/50 overflow-hidden shrink-0">
-                  <img
-                    src={viewingProduct.image}
-                    alt={viewingProduct.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Product ID</p>
-                    <p className="font-mono text-sm text-foreground">#{viewingProduct.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Product Title</p>
-                    <p className="font-semibold text-lg text-foreground">{viewingProduct.title}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant={viewingProduct.type === "REPAIR" ? "destructive" : "default"}>
-                      {viewingProduct.type}
-                    </Badge>
-                    <Badge variant="outline">{getCategoryName(viewingProduct.categoryId)}</Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price */}
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-1">Service Price</p>
-                <p className="text-2xl font-bold text-primary">
-                  ₹{viewingProduct.price.toLocaleString('en-IN')}
-                </p>
-              </div>
-
-              {/* Category & Type Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-secondary/30">
-                  <p className="text-xs text-muted-foreground mb-1">Category</p>
-                  <p className="font-medium text-foreground">{getCategoryName(viewingProduct.categoryId)}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-secondary/30">
-                  <p className="text-xs text-muted-foreground mb-1">Service Type</p>
-                  <p className="font-medium text-foreground">{viewingProduct.type}</p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="p-4 rounded-xl bg-secondary/30">
-                <p className="text-xs text-muted-foreground mb-2">Description</p>
-                <p className="text-foreground">{viewingProduct.description}</p>
-              </div>
-
-              {/* Description List */}
-              {viewingProduct.descriptionList.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">Service Includes</p>
-                  <div className="space-y-2">
-                    {viewingProduct.descriptionList.map((item, index) => (
-                      <div key={index} className="p-3 rounded-lg bg-secondary/30 flex gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium shrink-0">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{item.title}</p>
-                          <p className="text-sm text-muted-foreground">{item.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
-            </Button>
-            <Button 
-              onClick={() => {
-                setIsViewDialogOpen(false);
-                if (viewingProduct) handleEdit(viewingProduct);
-              }} 
-              className="btn-gradient"
-            >
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit Product
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };
