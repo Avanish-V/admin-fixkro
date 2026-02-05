@@ -21,6 +21,7 @@ import {
 import { Pencil, Trash2, X, Eye, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface ProductDescription {
   title: string;
@@ -41,6 +42,7 @@ interface Product {
   price: number;
   description: string;
   descriptionList: ProductDescription[];
+  isActive: boolean;
 }
 
 const categories: Category[] = [
@@ -64,6 +66,7 @@ const initialProducts: Product[] = [
       { title: "Filter Cleaning", description: "Remove and clean all filters" },
       { title: "Coil Cleaning", description: "Deep clean evaporator and condenser coils" },
     ],
+    isActive: true,
   },
   {
     id: "2",
@@ -77,6 +80,7 @@ const initialProducts: Product[] = [
       { title: "Diagnosis", description: "Complete system analysis" },
       { title: "Repair", description: "Fix or replace faulty components" },
     ],
+    isActive: true,
   },
   {
     id: "3",
@@ -90,6 +94,7 @@ const initialProducts: Product[] = [
       { title: "Motor Check", description: "Test motor functionality" },
       { title: "Belt Replacement", description: "Replace worn belts if needed" },
     ],
+    isActive: false,
   },
 ];
 
@@ -110,6 +115,17 @@ const Products = () => {
   const handleDelete = (id: string) => {
     setProducts(products.filter(p => p.id !== id));
     toast({ title: "Deleted", description: "Product has been removed" });
+  };
+
+  const handleToggleActive = (id: string) => {
+    setProducts(products.map(p => 
+      p.id === id ? { ...p, isActive: !p.isActive } : p
+    ));
+    const product = products.find(p => p.id === id);
+    toast({ 
+      title: product?.isActive ? "Deactivated" : "Activated", 
+      description: `Product has been ${product?.isActive ? "deactivated" : "activated"}` 
+    });
   };
 
   return (
@@ -169,6 +185,7 @@ const Products = () => {
               <TableHead className="text-muted-foreground">Category</TableHead>
               <TableHead className="text-muted-foreground">Type</TableHead>
               <TableHead className="text-muted-foreground">Price</TableHead>
+              <TableHead className="text-muted-foreground">Status</TableHead>
               <TableHead className="text-muted-foreground">Description</TableHead>
               <TableHead className="text-muted-foreground text-right">Actions</TableHead>
             </TableRow>
@@ -208,6 +225,17 @@ const Products = () => {
                 </TableCell>
                 <TableCell className="font-semibold text-primary">
                   ₹{product.price}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={product.isActive}
+                      onCheckedChange={() => handleToggleActive(product.id)}
+                    />
+                    <span className={`text-xs font-medium ${product.isActive ? "text-success" : "text-muted-foreground"}`}>
+                      {product.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground max-w-xs truncate">
                   {product.description}
