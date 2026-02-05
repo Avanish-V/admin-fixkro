@@ -18,9 +18,11 @@ import {
 import { Pencil, Trash2, Power, Upload, X, Link, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchCategories, createCategory, updateCategory, deleteCategory, CreateCategoryRequest } from "@/api/categories";
 
 interface Category {
-  id: string;
+  id: string; // This corresponds to categoryId from backend
   title: string;
   iconType: "svg" | "url";
   iconSvg: string;
@@ -41,44 +43,94 @@ const themeColors = [
   { name: "Yellow", value: "hsl(45, 93%, 47%)" },
 ];
 
-const initialCategories: Category[] = [
-  { id: "1", title: "Air Conditioner", iconType: "svg", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>', iconUrl: "", themeColor: "hsl(221, 83%, 53%)", status: "active", productsCount: 12 },
-  { id: "2", title: "Refrigerator", iconType: "svg", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg>', iconUrl: "", themeColor: "hsl(142, 76%, 36%)", status: "active", productsCount: 8 },
-  { id: "3", title: "Washing Machine", iconType: "svg", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>', iconUrl: "", themeColor: "hsl(262, 83%, 58%)", status: "active", productsCount: 15 },
-  { id: "4", title: "Television", iconType: "svg", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>', iconUrl: "", themeColor: "hsl(24, 95%, 53%)", status: "inactive", productsCount: 6 },
-  { id: "5", title: "Microwave", iconType: "svg", iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', iconUrl: "", themeColor: "hsl(330, 81%, 60%)", status: "active", productsCount: 4 },
-];
+// initialCategories removed
+
 
 const Categories = () => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const data = await fetchCategories();
+      return data.map((item): Category => ({
+        id: item.categoryId.toString(),
+        title: item.title,
+        iconType: item.iconType as "svg" | "url",
+        iconSvg: item.iconType === "svg" ? item.iconValue : "",
+        iconUrl: item.iconType === "url" ? item.iconValue : "",
+        themeColor: item.themeColor,
+        status: item.status as "active" | "inactive",
+        productsCount: 0 // Not provided by backend yet
+      }));
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({ title: "Success", description: "Category created successfully" });
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to create category", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: CreateCategoryRequest }) => updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({ title: "Success", description: "Category updated successfully" });
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to update category", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({ title: "Deleted", description: "Category removed successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to delete category", variant: "destructive" });
+    }
+  });
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ 
-    title: "", 
+  const [formData, setFormData] = useState({
+    title: "",
     iconType: "svg" as "svg" | "url",
-    iconSvg: "", 
+    iconSvg: "",
     iconUrl: "",
-    themeColor: themeColors[0].value 
+    themeColor: themeColors[0].value,
+    status: "active" as "active" | "inactive"
   });
   const [svgPreview, setSvgPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const handleCreate = () => {
     setEditingCategory(null);
-    setFormData({ title: "", iconType: "svg", iconSvg: "", iconUrl: "", themeColor: themeColors[0].value });
+    setFormData({ title: "", iconType: "svg", iconSvg: "", iconUrl: "", themeColor: themeColors[0].value, status: "active" });
     setSvgPreview("");
     setIsDialogOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    setFormData({ 
-      title: category.title, 
+    setFormData({
+      title: category.title,
       iconType: category.iconType,
-      iconSvg: category.iconSvg, 
+      iconSvg: category.iconSvg,
       iconUrl: category.iconUrl,
-      themeColor: category.themeColor 
+      themeColor: category.themeColor,
+      status: category.status
     });
     setSvgPreview(category.iconSvg);
     setIsDialogOpen(true);
@@ -122,48 +174,37 @@ const Categories = () => {
       return;
     }
 
+    const payload: CreateCategoryRequest = {
+      title: formData.title,
+      iconType: formData.iconType,
+      iconValue: formData.iconType === "svg" ? formData.iconSvg : formData.iconUrl,
+      themeColor: formData.themeColor,
+      status: formData.status
+    };
+
     if (editingCategory) {
-      setCategories(categories.map(c => 
-        c.id === editingCategory.id 
-          ? { 
-              ...c, 
-              title: formData.title, 
-              iconType: formData.iconType,
-              iconSvg: formData.iconSvg,
-              iconUrl: formData.iconUrl,
-              themeColor: formData.themeColor
-            }
-          : c
-      ));
-      toast({ title: "Success", description: "Category updated successfully" });
+      updateMutation.mutate({ id: parseInt(editingCategory.id), data: payload });
     } else {
-      const newCategory: Category = {
-        id: Date.now().toString(),
-        title: formData.title,
-        iconType: formData.iconType,
-        iconSvg: formData.iconSvg,
-        iconUrl: formData.iconUrl,
-        themeColor: formData.themeColor,
-        status: "active",
-        productsCount: 0,
-      };
-      setCategories([...categories, newCategory]);
-      toast({ title: "Success", description: "Category created successfully" });
+      createMutation.mutate(payload);
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = (id: string) => {
-    setCategories(categories.filter(c => c.id !== id));
-    toast({ title: "Deleted", description: "Category has been removed" });
+    if (confirm("Are you sure you want to delete this category?")) {
+      deleteMutation.mutate(parseInt(id));
+    }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setCategories(categories.map(c => 
-      c.id === id 
-        ? { ...c, status: c.status === "active" ? "inactive" : "active" }
-        : c
-    ));
+  const handleToggleStatus = (category: Category) => {
+    const newStatus = category.status === "active" ? "inactive" : "active";
+    const payload: CreateCategoryRequest = {
+      title: category.title,
+      iconType: category.iconType,
+      iconValue: category.iconType === "svg" ? category.iconSvg : category.iconUrl,
+      themeColor: category.themeColor,
+      status: newStatus
+    };
+    updateMutation.mutate({ id: parseInt(category.id), data: payload });
   };
 
   const columns = [
@@ -171,7 +212,7 @@ const Categories = () => {
       key: "icon",
       header: "Icon",
       render: (item: Category) => (
-        <div 
+        <div
           className="w-10 h-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: `${item.themeColor}20`, color: item.themeColor }}
         >
@@ -189,7 +230,7 @@ const Categories = () => {
       header: "Theme",
       render: (item: Category) => (
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="w-6 h-6 rounded-full border border-border"
             style={{ backgroundColor: item.themeColor }}
           />
@@ -218,12 +259,11 @@ const Categories = () => {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => handleToggleStatus(item.id)}
-            className={`p-2 rounded-lg transition-colors ${
-              item.status === "active"
-                ? "bg-success/10 text-success hover:bg-success/20"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
+            onClick={() => handleToggleStatus(item)}
+            className={`p-2 rounded-lg transition-colors ${item.status === "active"
+              ? "bg-success/10 text-success hover:bg-success/20"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
           >
             <Power className="w-4 h-4" />
           </motion.button>
@@ -314,10 +354,10 @@ const Categories = () => {
                           <Upload className="w-4 h-4" />
                           Choose SVG File
                         </Button>
-                        
+
                         {svgPreview && (
                           <div className="flex items-center gap-2">
-                            <div 
+                            <div
                               className="w-12 h-12 rounded-lg flex items-center justify-center border border-border"
                               style={{ backgroundColor: `${formData.themeColor}20`, color: formData.themeColor }}
                               dangerouslySetInnerHTML={{ __html: svgPreview }}
@@ -348,7 +388,7 @@ const Categories = () => {
                           className="bg-secondary/50 flex-1"
                         />
                         {formData.iconUrl && (
-                          <div 
+                          <div
                             className="w-12 h-12 rounded-lg flex items-center justify-center border border-border"
                             style={{ backgroundColor: `${formData.themeColor}20` }}
                           >
@@ -371,11 +411,10 @@ const Categories = () => {
                         key={color.value}
                         type="button"
                         onClick={() => setFormData({ ...formData, themeColor: color.value })}
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          formData.themeColor === color.value 
-                            ? "border-foreground scale-110" 
-                            : "border-transparent hover:scale-105"
-                        }`}
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${formData.themeColor === color.value
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-105"
+                          }`}
                         style={{ backgroundColor: color.value }}
                         title={color.name}
                       />
