@@ -88,29 +88,40 @@ const Products = () => {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <PageHeader
-          title="Products"
-          description="Manage your repair and maintenance services"
-          action={{ label: "Add Product", onClick: () => navigate("/products/new") }}
-        />
-        <div className="flex items-center gap-3 bg-card p-2 rounded-xl border border-border">
-          <Label className="text-muted-foreground ml-2">Category:</Label>
-          <Select
-            value={selectedCategoryId?.toString()}
-            onValueChange={(v) => setSelectedCategoryId(parseInt(v))}
-          >
-            <SelectTrigger className="w-[180px] bg-secondary/50 border-none">
-              <SelectValue placeholder="Select Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.categoryId} value={cat.categoryId.toString()}>
-                  {cat.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Products</h1>
+            <p className="text-muted-foreground">Manage your repair and maintenance services</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-card p-2 rounded-xl border border-border">
+              <Label className="text-muted-foreground ml-2 text-sm">Category:</Label>
+              <Select
+                value={selectedCategoryId?.toString()}
+                onValueChange={(v) => setSelectedCategoryId(parseInt(v))}
+              >
+                <SelectTrigger className="w-[160px] bg-secondary/50 border-none">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId.toString()}>
+                      {cat.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/products/new")}
+              className="btn-gradient px-4 py-2 rounded-xl font-medium text-sm"
+            >
+              + Add Product
+            </motion.button>
+          </div>
         </div>
       </div>
 
