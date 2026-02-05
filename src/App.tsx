@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import Products from "./pages/Products";
+import ProductView from "./pages/ProductView";
+import ProductForm from "./pages/ProductForm";
 import Offers from "./pages/Offers";
 import OfferForm from "./pages/OfferForm";
 import Orders from "./pages/Orders";
@@ -33,6 +35,9 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductView />} />
+          <Route path="/products/new" element={<ProductForm />} />
+          <Route path="/products/edit/:id" element={<ProductForm />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/offers/new" element={<OfferForm />} />
           <Route path="/offers/:id/edit" element={<OfferForm />} />
