@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash2, Eye, Filter, Loader2, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -194,10 +195,20 @@ const Products = () => {
                       ₹{product.price}
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.status ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
-                        }`}>
-                        {product.status ? "Active" : "Inactive"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={product.status}
+                          onCheckedChange={() => {
+                            toast({
+                              title: product.status ? "Deactivated" : "Activated",
+                              description: `${product.title} is now ${product.status ? "inactive" : "active"}`,
+                            });
+                          }}
+                        />
+                        <span className={`text-xs font-medium ${product.status ? "text-green-500" : "text-muted-foreground"}`}>
+                          {product.status ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
