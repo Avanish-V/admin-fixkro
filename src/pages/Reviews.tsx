@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, Plus, Search, Edit2, Trash2, MessageSquare } from "lucide-react";
+import { Star, Plus, Search, Edit2, Trash2, MessageSquare, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -22,78 +22,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-interface Review {
-  id: string;
-  productId: string;
-  productName: string;
-  customerName: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-}
-
-const products: Product[] = [
-  { id: "PRD001", name: "AC Repair Service" },
-  { id: "PRD002", name: "Refrigerator Repair" },
-  { id: "PRD003", name: "Washing Machine Service" },
-  { id: "PRD004", name: "TV Installation" },
-  { id: "PRD005", name: "Plumbing Service" },
-  { id: "PRD006", name: "Electrical Work" },
-];
-
-const initialReviews: Review[] = [
-  {
-    id: "1",
-    productId: "PRD001",
-    productName: "AC Repair Service",
-    customerName: "Rahul Sharma",
-    rating: 5,
-    comment: "Excellent service! The technician was very professional and fixed my AC quickly.",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    productId: "PRD002",
-    productName: "Refrigerator Repair",
-    customerName: "Priya Patel",
-    rating: 4,
-    comment: "Good service, technician arrived on time. Minor delay in getting parts.",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: "3",
-    productId: "PRD003",
-    productName: "Washing Machine Service",
-    customerName: "Amit Kumar",
-    rating: 5,
-    comment: "Very satisfied with the service. Will recommend to others.",
-    createdAt: "2024-01-13",
-  },
-  {
-    id: "4",
-    productId: "PRD001",
-    productName: "AC Repair Service",
-    customerName: "Sneha Gupta",
-    rating: 3,
-    comment: "Service was okay, but took longer than expected.",
-    createdAt: "2024-01-12",
-  },
-  {
-    id: "5",
-    productId: "PRD005",
-    productName: "Plumbing Service",
-    customerName: "Vikram Singh",
-    rating: 5,
-    comment: "Quick response and professional work. Highly recommended!",
-    createdAt: "2024-01-11",
-  },
-];
+import { Review, fetchReviews, createReview, updateReview, deleteReview } from "@/api/reviews";
+import { ProductResponse, fetchAllProducts } from "@/api/products";
 
 const StarRating = ({
   rating,
@@ -136,7 +66,9 @@ const StarRating = ({
 };
 
 const Reviews = () => {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterProduct, setFilterProduct] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -149,13 +81,37 @@ const Reviews = () => {
   });
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [reviewsData, productsData] = await Promise.all([
+        fetchReviews(),
+        fetchAllProducts(),
+      ]);
+      setReviews(reviewsData);
+      setProducts(productsData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredReviews = reviews.filter((review) => {
     const matchesSearch =
       review.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesProduct =
-      filterProduct === "all" || review.productId === filterProduct;
+      filterProduct === "all" || review.productId.toString() === filterProduct;
     return matchesSearch && matchesProduct;
   });
 
@@ -163,7 +119,7 @@ const Reviews = () => {
     if (review) {
       setEditingReview(review);
       setFormData({
-        productId: review.productId,
+        productId: review.productId.toString(),
         customerName: review.customerName,
         rating: review.rating,
         comment: review.comment,
@@ -175,7 +131,7 @@ const Reviews = () => {
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.productId || !formData.customerName || !formData.rating || !formData.comment) {
       toast({
         title: "Error",
@@ -185,37 +141,45 @@ const Reviews = () => {
       return;
     }
 
-    const selectedProduct = products.find((p) => p.id === formData.productId);
-
-    if (editingReview) {
-      setReviews(
-        reviews.map((r) =>
-          r.id === editingReview.id
-            ? {
-                ...r,
-                ...formData,
-                productName: selectedProduct?.name || "",
-              }
-            : r
-        )
-      );
-      toast({ title: "Success", description: "Review updated successfully" });
-    } else {
-      const newReview: Review = {
-        id: Date.now().toString(),
-        ...formData,
-        productName: selectedProduct?.name || "",
-        createdAt: new Date().toISOString().split("T")[0],
-      };
-      setReviews([newReview, ...reviews]);
-      toast({ title: "Success", description: "Review added successfully" });
+    try {
+      if (editingReview) {
+        const updated = await updateReview(editingReview.id.toString(), {
+          ...formData,
+          productId: formData.productId,
+        });
+        setReviews(reviews.map((r) => (r.id === updated.id ? updated : r)));
+        toast({ title: "Success", description: "Review updated successfully" });
+      } else {
+        const created = await createReview({
+          ...formData,
+          productId: formData.productId,
+        });
+        setReviews([created, ...reviews]);
+        toast({ title: "Success", description: "Review added successfully" });
+      }
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save review",
+        variant: "destructive",
+      });
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    setReviews(reviews.filter((r) => r.id !== id));
-    toast({ title: "Success", description: "Review deleted successfully" });
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    try {
+      await deleteReview(id);
+      setReviews(reviews.filter((r) => r.id !== id));
+      toast({ title: "Success", description: "Review deleted successfully" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete review",
+        variant: "destructive",
+      });
+    }
   };
 
   const averageRating =
@@ -307,8 +271,8 @@ const Reviews = () => {
             <SelectContent>
               <SelectItem value="all">All Products</SelectItem>
               {products.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.name}
+                <SelectItem key={product.productId} value={product.productId.toString()}>
+                  {product.title}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -316,62 +280,68 @@ const Reviews = () => {
         </div>
 
         {/* Reviews List */}
-        <div className="space-y-4">
-          {filteredReviews.map((review, index) => (
-            <motion.div
-              key={review.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-semibold text-foreground">
-                      {review.customerName}
-                    </span>
-                    <StarRating rating={review.rating} />
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredReviews.map((review, index) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-semibold text-foreground">
+                        {review.customerName}
+                      </span>
+                      <StarRating rating={review.rating} />
+                    </div>
+                    <p className="text-sm text-primary font-medium mb-2">
+                      {review.productName}
+                    </p>
+                    <p className="text-muted-foreground">{review.comment}</p>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      {new Date(review.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
-                  <p className="text-sm text-primary font-medium mb-2">
-                    {review.productName}
-                  </p>
-                  <p className="text-muted-foreground">{review.comment}</p>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    {new Date(review.createdAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleOpenDialog(review)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(review.id.toString())}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleOpenDialog(review)}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(review.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
 
-        {filteredReviews.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No reviews found</p>
+            {filteredReviews.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No reviews found</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -397,8 +367,8 @@ const Reviews = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name}
+                      <SelectItem key={product.productId} value={product.productId.toString()}>
+                        {product.title}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1,71 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Pencil, Trash2, Power, Copy } from "lucide-react";
+import { Pencil, Trash2, Power, Copy, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-interface Offer {
-  id: string;
-  couponCode: string;
-  product: string;
-  category: string;
-  discountType: "FIXED" | "PERCENTAGE";
-  discountValue: number;
-  status: "active" | "inactive";
-  expiryDate: Date;
-  limit: number;
-  userType: "FIRST_USER" | "REGULAR";
-}
-
-const initialOffers: Offer[] = [
-  {
-    id: "1",
-    couponCode: "FIRST50",
-    product: "AC Deep Cleaning",
-    category: "Air Conditioner",
-    discountType: "PERCENTAGE",
-    discountValue: 50,
-    status: "active",
-    expiryDate: new Date("2024-12-31"),
-    limit: 100,
-    userType: "FIRST_USER",
-  },
-  {
-    id: "2",
-    couponCode: "SAVE20",
-    product: "All Services",
-    category: "All Categories",
-    discountType: "FIXED",
-    discountValue: 20,
-    status: "active",
-    expiryDate: new Date("2024-11-30"),
-    limit: 500,
-    userType: "REGULAR",
-  },
-  {
-    id: "3",
-    couponCode: "SUMMER25",
-    product: "Refrigerator Compressor Repair",
-    category: "Refrigerator",
-    discountType: "PERCENTAGE",
-    discountValue: 25,
-    status: "inactive",
-    expiryDate: new Date("2024-08-31"),
-    limit: 200,
-    userType: "REGULAR",
-  },
-];
+import { Offer, fetchOffers, deleteOffer, toggleOfferStatus } from "@/api/offers";
 
 const Offers = () => {
-  const [offers, setOffers] = useState<Offer[]>(initialOffers);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadOffers();
+  }, []);
+
+  const loadOffers = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchOffers();
+      setOffers(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load offers",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     navigate("/offers/new");
@@ -75,17 +45,36 @@ const Offers = () => {
     navigate(`/offers/${offer.id}/edit`);
   };
 
-  const handleDelete = (id: string) => {
-    setOffers(offers.filter(o => o.id !== id));
-    toast({ title: "Deleted", description: "Offer has been removed" });
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this offer?")) return;
+    try {
+      await deleteOffer(id);
+      setOffers(offers.filter(o => o.id !== id));
+      toast({ title: "Deleted", description: "Offer has been removed" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete offer",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setOffers(offers.map(o => 
-      o.id === id 
-        ? { ...o, status: o.status === "active" ? "inactive" : "active" }
-        : o
-    ));
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const updated = await toggleOfferStatus(id);
+      setOffers(offers.map(o => o.id === id ? updated : o));
+      toast({
+        title: "Success",
+        description: `Offer is now ${updated.status.toLowerCase()}`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyCode = (code: string) => {
@@ -113,14 +102,22 @@ const Offers = () => {
         </div>
       ),
     },
-    { key: "category", header: "Category" },
-    { key: "product", header: "Product" },
+    {
+      key: "category",
+      header: "Category",
+      render: (item: Offer) => item.categoryName || "All Categories"
+    },
+    {
+      key: "product",
+      header: "Product",
+      render: (item: Offer) => item.productName || "All Products"
+    },
     {
       key: "discount",
       header: "Discount",
       render: (item: Offer) => (
         <span className="font-semibold">
-          {item.discountType === "PERCENTAGE" ? `${item.discountValue}%` : `$${item.discountValue}`}
+          {item.discountType === "PERCENTAGE" ? `${item.discountValue}%` : `\u20B9${item.discountValue}`}
         </span>
       ),
     },
@@ -130,8 +127,8 @@ const Offers = () => {
       render: (item: Offer) => (
         <span className={cn(
           "px-2 py-1 rounded-full text-xs font-medium",
-          item.userType === "FIRST_USER" 
-            ? "bg-info/20 text-info" 
+          item.userType === "FIRST_USER"
+            ? "bg-info/20 text-info"
             : "bg-secondary text-muted-foreground"
         )}>
           {item.userType === "FIRST_USER" ? "First User" : "Regular"}
@@ -141,13 +138,17 @@ const Offers = () => {
     {
       key: "expiryDate",
       header: "Expires",
-      render: (item: Offer) => format(item.expiryDate, "MMM dd, yyyy"),
+      render: (item: Offer) => format(new Date(item.expiryDate), "MMM dd, yyyy"),
     },
-    { key: "limit", header: "Limit" },
+    {
+      key: "limit",
+      header: "Limit",
+      render: (item: Offer) => item.limit === 0 ? "Unlimited" : item.limit
+    },
     {
       key: "status",
       header: "Status",
-      render: (item: Offer) => <StatusBadge status={item.status} />,
+      render: (item: Offer) => <StatusBadge status={item.status.toLowerCase() as "active" | "inactive"} />,
     },
     {
       key: "actions",
@@ -166,11 +167,10 @@ const Offers = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => handleToggleStatus(item.id)}
-            className={`p-2 rounded-lg transition-colors ${
-              item.status === "active"
-                ? "bg-success/10 text-success hover:bg-success/20"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
+            className={`p-2 rounded-lg transition-colors ${item.status === "ACTIVE"
+              ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
           >
             <Power className="w-4 h-4" />
           </motion.button>
@@ -195,7 +195,13 @@ const Offers = () => {
         action={{ label: "Add Offer", onClick: handleCreate }}
       />
 
-      <DataTable columns={columns} data={offers} keyExtractor={(item) => item.id} />
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <DataTable columns={columns} data={offers} keyExtractor={(item) => item.id} />
+      )}
     </AdminLayout>
   );
 };

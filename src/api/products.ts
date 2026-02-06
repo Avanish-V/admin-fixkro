@@ -42,6 +42,15 @@ export const fetchProductsByCategory = async (categoryId: number): Promise<Produ
     return json.data || [];
 };
 
+export const fetchAllProducts = async (): Promise<ProductResponse[]> => {
+    const response = await fetch(`${API_URL}/services/all`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch all products");
+    }
+    const json = await response.json();
+    return json.data || [];
+};
+
 export const createProduct = async (data: CreateProductRequest): Promise<ProductResponse> => {
     const response = await fetch(`${API_URL}/service`, {
         method: "POST",
