@@ -35,6 +35,7 @@ const OfferForm = () => {
 
   const [formData, setFormData] = useState<any>({
     couponCode: "",
+    shortDescription: "",
     categoryId: "all",
     productId: "all",
     discountType: "PERCENTAGE",
@@ -62,6 +63,7 @@ const OfferForm = () => {
         const offer = await fetchOfferById(id);
         setFormData({
           couponCode: offer.couponCode,
+          shortDescription: offer.shortDescription || "",
           categoryId: offer.categoryId?.toString() || "all",
           productId: offer.productId?.toString() || "all",
           discountType: offer.discountType,
@@ -200,6 +202,22 @@ const OfferForm = () => {
                   </p>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="shortDescription">Short Description</Label>
+                  <Input
+                    id="shortDescription"
+                    placeholder="e.g., Summer Special Deal"
+                    value={formData.shortDescription}
+                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                    className="bg-secondary/50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A brief title/tagline for the offer
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>User Type</Label>
                   <Select
@@ -396,18 +414,25 @@ const OfferForm = () => {
               className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20"
             >
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
-              <div className="flex flex-wrap items-center gap-4">
-                <code className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-mono text-xl font-bold tracking-wider">
-                  {formData.couponCode || "COUPONCODE"}
-                </code>
-                <span className="text-2xl font-bold text-foreground">
-                  {formData.discountType === "PERCENTAGE"
-                    ? `${formData.discountValue}% OFF`
-                    : `\u20B9${formData.discountValue} OFF`}
-                </span>
-                <span className="text-muted-foreground">
-                  • Valid until {format(formData.expiryDate, "MMM dd, yyyy")}
-                </span>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <code className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-mono text-xl font-bold tracking-wider">
+                    {formData.couponCode || "COUPONCODE"}
+                  </code>
+                  <span className="text-2xl font-bold text-foreground">
+                    {formData.discountType === "PERCENTAGE"
+                      ? `${formData.discountValue}% OFF`
+                      : `\u20B9${formData.discountValue} OFF`}
+                  </span>
+                  <span className="text-muted-foreground">
+                    • Valid until {format(formData.expiryDate, "MMM dd, yyyy")}
+                  </span>
+                </div>
+                {formData.shortDescription && (
+                  <p className="text-lg font-medium text-foreground/80 italic">
+                    "{formData.shortDescription}"
+                  </p>
+                )}
               </div>
             </motion.div>
 

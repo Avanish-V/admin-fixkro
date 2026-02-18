@@ -1,6 +1,7 @@
 export interface Offer {
     id: string;
     couponCode: string;
+    shortDescription?: string;
     categoryId: string | null;
     categoryName: string | null;
     productId: string | null;
@@ -17,6 +18,7 @@ export interface Offer {
 
 export interface CreateOfferRequest {
     couponCode: string;
+    shortDescription?: string;
     categoryId: string | null;
     productId: string | null;
     discountType: "FIXED" | "PERCENTAGE";

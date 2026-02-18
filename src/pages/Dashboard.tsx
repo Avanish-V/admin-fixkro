@@ -12,6 +12,7 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -24,38 +25,56 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-
-const revenueData = [
-  { name: "Jan", revenue: 4000, orders: 24 },
-  { name: "Feb", revenue: 3000, orders: 18 },
-  { name: "Mar", revenue: 5000, orders: 32 },
-  { name: "Apr", revenue: 4500, orders: 28 },
-  { name: "May", revenue: 6000, orders: 38 },
-  { name: "Jun", revenue: 5500, orders: 35 },
-  { name: "Jul", revenue: 7000, orders: 45 },
-];
-
-const recentOrders = [
-  { id: "ORD-001", customer: "John Doe", service: "AC Repair", status: "completed" as const, amount: "₹12,500" },
-  { id: "ORD-002", customer: "Jane Smith", service: "Washing Machine", status: "assigned" as const, amount: "₹16,700" },
-  { id: "ORD-003", customer: "Mike Johnson", service: "Refrigerator", status: "assigning" as const, amount: "₹15,000" },
-  { id: "ORD-004", customer: "Sarah Wilson", service: "Microwave", status: "completed" as const, amount: "₹6,700" },
-  { id: "ORD-005", customer: "Tom Brown", service: "Dishwasher", status: "pending" as const, amount: "₹10,000" },
-];
-
-const orderColumns = [
-  { key: "id", header: "Order ID" },
-  { key: "customer", header: "Customer" },
-  { key: "service", header: "Service" },
-  {
-    key: "status",
-    header: "Status",
-    render: (item: (typeof recentOrders)[0]) => <StatusBadge status={item.status} />,
-  },
-  { key: "amount", header: "Amount" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { fetchDashboardStats } from "@/api/dashboard";
+import { OrderResponse } from "@/api/orders";
 
 const Dashboard = () => {
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: fetchDashboardStats,
+  });
+
+  const orderColumns = [
+    { key: "orderId", header: "Order ID" },
+    {
+      key: "serviceAddress",
+      header: "Customer",
+      render: (item: OrderResponse) => item.serviceAddress.fullName
+    },
+    { key: "productTitle", header: "Service" },
+    {
+      key: "status",
+      header: "Status",
+      render: (item: OrderResponse) => <StatusBadge status={item.status.toLowerCase() as any} />,
+    },
+    {
+      key: "totalAmount",
+      header: "Amount",
+      render: (item: OrderResponse) => `₹${item.totalAmount.toLocaleString('en-IN')}`
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-destructive">
+          <p>Error loading dashboard data. Please try again later.</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <motion.div
@@ -72,15 +91,15 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatsCard
             title="Total Orders"
-            value="1,284"
-            change="+12.5% from last month"
+            value={stats.totalOrders.toLocaleString()}
+            change={stats.growthRate + " from last month"}
             changeType="positive"
             icon={ShoppingCart}
             delay={0}
           />
           <StatsCard
             title="Revenue"
-            value="₹40,47,800"
+            value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
             change="+8.2% from last month"
             changeType="positive"
             icon={DollarSign}
@@ -88,15 +107,15 @@ const Dashboard = () => {
           />
           <StatsCard
             title="Active Services"
-            value="156"
-            change="23 pending"
+            value={stats.activeServices.toString()}
+            change="Across categories"
             changeType="neutral"
             icon={Package}
             delay={0.2}
           />
           <StatsCard
             title="Professionals"
-            value="48"
+            value={stats.totalProfessionals.toString()}
             change="12 online"
             changeType="positive"
             icon={Users}
@@ -114,7 +133,7 @@ const Dashboard = () => {
           >
             <h3 className="text-lg font-semibold text-foreground mb-4">Revenue Overview</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData}>
+              <AreaChart data={stats.revenueData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(32 95% 55%)" stopOpacity={0.3} />
@@ -151,7 +170,7 @@ const Dashboard = () => {
           >
             <h3 className="text-lg font-semibold text-foreground mb-4">Orders by Month</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
+              <BarChart data={stats.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 18%)" />
                 <XAxis dataKey="name" stroke="hsl(215 20% 55%)" />
                 <YAxis stroke="hsl(215 20% 55%)" />
@@ -171,10 +190,10 @@ const Dashboard = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
-            { icon: CheckCircle2, label: "Completed Today", value: "12", color: "text-success" },
-            { icon: Clock, label: "In Progress", value: "8", color: "text-info" },
-            { icon: AlertCircle, label: "Pending", value: "5", color: "text-warning" },
-            { icon: TrendingUp, label: "Growth Rate", value: "+24%", color: "text-primary" },
+            { icon: CheckCircle2, label: "Completed Today", value: stats.completedToday.toString(), color: "text-success" },
+            { icon: Clock, label: "In Progress", value: stats.inProgress.toString(), color: "text-info" },
+            { icon: AlertCircle, label: "Pending", value: stats.pending.toString(), color: "text-warning" },
+            { icon: TrendingUp, label: "Growth Rate", value: stats.growthRate, color: "text-primary" },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -200,8 +219,14 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Orders</h3>
-          <DataTable columns={orderColumns} data={recentOrders} keyExtractor={(item) => item.id} />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Recent Orders</h3>
+          </div>
+          <DataTable
+            columns={orderColumns}
+            data={stats.recentOrders}
+            keyExtractor={(item) => item.id.toString()}
+          />
         </motion.div>
       </motion.div>
     </AdminLayout>

@@ -26,107 +26,61 @@ import {
   ChevronRight,
   UserCheck,
 } from "lucide-react";
+import { fetchAllOrders, updateOrderStatus, OrderResponse } from "@/api/orders";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-interface Order {
-  id: string;
-  customer: {
-    name: string;
-    phone: string;
-    email: string;
-    address: string;
-  };
-  product: {
-    title: string;
-    type: "REPAIR" | "MAINTENANCE";
-    price: number;
-  };
-  status: "assigning" | "assigned" | "completed";
-  professional: string | null;
-  orderDate: string;
-  transaction: {
-    id: string;
-    method: string;
-    status: string;
-    amount: number;
-  };
-}
-
-const initialOrders: Order[] = [
-  {
-    id: "ORD-001",
-    customer: {
-      name: "John Doe",
-      phone: "+91 98765 43210",
-      email: "john@email.com",
-      address: "123 Main St, Apt 4B, Mumbai, MH 400001",
-    },
-    product: { title: "AC Deep Cleaning", type: "MAINTENANCE", price: 4199 },
-    status: "completed",
-    professional: "Mike Thompson",
-    orderDate: "2024-01-15",
-    transaction: { id: "TXN-001", method: "Credit Card", status: "Completed", amount: 4199 },
-  },
-  {
-    id: "ORD-002",
-    customer: {
-      name: "Jane Smith",
-      phone: "+91 87654 32109",
-      email: "jane@email.com",
-      address: "456 Oak Ave, Suite 12, Delhi, DL 110001",
-    },
-    product: { title: "Refrigerator Compressor Repair", type: "REPAIR", price: 12499 },
-    status: "assigned",
-    professional: "David Wilson",
-    orderDate: "2024-01-16",
-    transaction: { id: "TXN-002", method: "UPI", status: "Completed", amount: 12499 },
-  },
-  {
-    id: "ORD-003",
-    customer: {
-      name: "Bob Johnson",
-      phone: "+91 76543 21098",
-      email: "bob@email.com",
-      address: "789 Pine Rd, Bangalore, KA 560001",
-    },
-    product: { title: "Washing Machine Motor Repair", type: "REPAIR", price: 7499 },
-    status: "assigning",
-    professional: null,
-    orderDate: "2024-01-17",
-    transaction: { id: "TXN-003", method: "Credit Card", status: "Pending", amount: 7499 },
-  },
-  {
-    id: "ORD-004",
-    customer: {
-      name: "Sarah Davis",
-      phone: "+91 65432 10987",
-      email: "sarah@email.com",
-      address: "321 Elm St, Chennai, TN 600001",
-    },
-    product: { title: "AC Installation", type: "MAINTENANCE", price: 24999 },
-    status: "assigned",
-    professional: "James Brown",
-    orderDate: "2024-01-18",
-    transaction: { id: "TXN-004", method: "Debit Card", status: "Completed", amount: 24999 },
-  },
-];
+// Orders Page
 
 const professionals = ["Mike Thompson", "David Wilson", "James Brown", "Sarah Lee", "Tom Harris"];
 
 const Orders = () => {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const handleStatusChange = (orderId: string, newStatus: Order["status"]) => {
-    setOrders(orders.map(o => 
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ));
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: fetchAllOrders,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
+      updateOrderStatus(orderId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Order status updated");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to update status");
+    }
+  });
+
+  const handleStatusChange = (orderId: number, newStatus: string) => {
+    // Map frontend status to backend status if needed
+    // The UI uses assigning, assigned, completed
+    // Backend uses CREATED, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED
+    let backendStatus = newStatus.toUpperCase();
+    if (backendStatus === "ASSIGNING") backendStatus = "CREATED";
+
+    statusMutation.mutate({ orderId, status: backendStatus });
   };
 
-  const handleAssignProfessional = (orderId: string, professional: string) => {
-    setOrders(orders.map(o => 
-      o.id === orderId ? { ...o, professional, status: "assigned" as const } : o
-    ));
+  const handleAssignProfessional = (orderId: number, professional: string) => {
+    // For now we just update status to ASSIGNED as professional assignment 
+    // might need a different endpoint or technicianId field update
+    statusMutation.mutate({ orderId, status: "ASSIGNED" });
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <PageHeader title="Orders" description="Loading orders..." />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -161,9 +115,9 @@ const Orders = () => {
                       <Package className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{order.id}</p>
+                      <p className="font-semibold text-foreground">{order.orderId}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="w-3 h-3" /> {order.orderDate}
+                        <Calendar className="w-3 h-3" /> {new Date(order.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -171,35 +125,31 @@ const Orders = () => {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{order.customer.name}</span>
+                    <span className="text-foreground">{order.serviceAddress.fullName}</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div>
-                    <p className="text-foreground">{order.product.title}</p>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      order.product.type === "REPAIR" 
-                        ? "bg-destructive/20 text-destructive" 
-                        : "bg-info/20 text-info"
-                    }`}>
-                      {order.product.type}
+                    <p className="text-foreground">{order.productTitle}</p>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium bg-info/20 text-info`}>
+                      {order.applianceBrand || "Service"}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <p className="font-semibold text-foreground">₹{order.product.price.toLocaleString('en-IN')}</p>
+                  <p className="font-semibold text-foreground">₹{order.totalAmount.toLocaleString('en-IN')}</p>
                 </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Select
-                    value={order.professional || ""}
+                    value={order.technicianId?.toString() || ""}
                     onValueChange={(value) => handleAssignProfessional(order.id, value)}
                   >
                     <SelectTrigger className="w-[160px] bg-secondary/50">
                       <SelectValue placeholder="Assign">
-                        {order.professional && (
+                        {order.technicianId && (
                           <span className="flex items-center gap-2">
                             <UserCheck className="w-3.5 h-3.5 text-success" />
-                            {order.professional}
+                            Tech #{order.technicianId}
                           </span>
                         )}
                       </SelectValue>
@@ -215,16 +165,18 @@ const Orders = () => {
                 </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Select
-                    value={order.status}
-                    onValueChange={(value: Order["status"]) => handleStatusChange(order.id, value)}
+                    value={order.status.toLowerCase()}
+                    onValueChange={(value) => handleStatusChange(order.id, value)}
                   >
                     <SelectTrigger className="w-[120px] bg-secondary/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="assigning">Assigning</SelectItem>
+                      <SelectItem value="created">Created</SelectItem>
                       <SelectItem value="assigned">Assigned</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

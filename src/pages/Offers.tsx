@@ -85,20 +85,27 @@ const Offers = () => {
   const columns = [
     {
       key: "couponCode",
-      header: "Coupon Code",
+      header: "Coupon / Offer",
       render: (item: Offer) => (
-        <div className="flex items-center gap-2">
-          <code className="px-2 py-1 rounded bg-primary/10 text-primary font-mono text-sm">
-            {item.couponCode}
-          </code>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => copyCode(item.couponCode)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Copy className="w-4 h-4" />
-          </motion.button>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <code className="px-2 py-1 rounded bg-primary/10 text-primary font-mono text-sm">
+              {item.couponCode}
+            </code>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => copyCode(item.couponCode)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Copy className="w-4 h-4" />
+            </motion.button>
+          </div>
+          {item.shortDescription && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[150px]" title={item.shortDescription}>
+              {item.shortDescription}
+            </span>
+          )}
         </div>
       ),
     },
