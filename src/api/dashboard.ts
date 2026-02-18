@@ -1,3 +1,4 @@
+import { apiClient } from "./apiClient";
 import { OrderResponse } from "./orders";
 
 export interface ChartData {
@@ -19,11 +20,11 @@ export interface DashboardStats {
     recentOrders: OrderResponse[];
 }
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/dashboard`;
-
 export const fetchDashboardStats = async (): Promise<DashboardStats> => {
-    const response = await fetch(`${API_URL}/stats`);
-    if (!response.ok) throw new Error("Failed to fetch dashboard stats");
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.get("/dashboard/stats");
+    if (!ok || !data.success) {
+        throw new Error(data.error?.message || "Failed to fetch dashboard stats");
+    }
+    return data.data;
 };
+

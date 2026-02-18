@@ -1,3 +1,5 @@
+import { apiClient } from "./apiClient";
+
 export interface ProfessionalResponse {
     id: number;
     name: string;
@@ -33,54 +35,39 @@ export interface UpdateProfessionalRequest {
     status: string;
 }
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/professionals`;
-
 export const fetchProfessionals = async (): Promise<ProfessionalResponse[]> => {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error("Failed to fetch professionals");
-    const json = await response.json();
-    return json.data || [];
+    const { ok, data } = await apiClient.get("/professionals");
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch professionals");
+    return data.data || [];
 };
 
 export const fetchProfessionalById = async (id: number): Promise<ProfessionalResponse> => {
-    const response = await fetch(`${API_URL}/${id}`);
-    if (!response.ok) throw new Error("Failed to fetch professional");
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.get(`/professionals/${id}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch professional");
+    return data.data;
 };
 
-export const searchProfessionals = async (query: String): Promise<ProfessionalResponse[]> => {
-    const response = await fetch(`${API_URL}/search?query=${query}`);
-    if (!response.ok) throw new Error("Failed to search professionals");
-    const json = await response.json();
-    return json.data || [];
+export const searchProfessionals = async (query: string): Promise<ProfessionalResponse[]> => {
+    const { ok, data } = await apiClient.get(`/professionals/search?query=${query}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to search professionals");
+    return data.data || [];
 };
 
 export const createProfessional = async (data: CreateProfessionalRequest): Promise<ProfessionalResponse> => {
-    const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error("Failed to create professional");
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.post("/professionals", data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create professional");
+    return resData.data;
 };
 
 export const updateProfessional = async (id: number, data: UpdateProfessionalRequest): Promise<ProfessionalResponse> => {
-    const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error("Failed to update professional");
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.put(`/professionals/${id}`, data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update professional");
+    return resData.data;
 };
 
 export const deleteProfessional = async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    if (!response.ok) throw new Error("Failed to delete professional");
+    const { ok, data } = await apiClient.delete(`/professionals/${id}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete professional");
 };
 
 export const uploadFile = async (file: File, folder: string): Promise<string> => {
@@ -88,12 +75,8 @@ export const uploadFile = async (file: File, folder: string): Promise<string> =>
     formData.append("file", file);
     formData.append("folder", folder);
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files/upload`, {
-        method: "POST",
-        body: formData,
-    });
-
-    if (!response.ok) throw new Error("Failed to upload file");
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.post("/files/upload", formData);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to upload file");
+    return data.data;
 };
+

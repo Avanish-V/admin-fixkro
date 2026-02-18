@@ -1,3 +1,5 @@
+import { apiClient } from "./apiClient";
+
 export interface Address {
     fullName: string;
     phone: string;
@@ -35,58 +37,36 @@ export interface OrderResponse {
     cancellationReason?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
-
 export const fetchAllOrders = async (): Promise<OrderResponse[]> => {
-    const response = await fetch(`${API_URL}/order/all`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch all orders");
-    }
-    const json = await response.json();
-    return json.data || [];
+    const { ok, data } = await apiClient.get("/order/all");
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch orders");
+    return data.data || [];
 };
 
 export const fetchOrder = async (orderId: number): Promise<OrderResponse> => {
-    const response = await fetch(`${API_URL}/order/${orderId}`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch order details");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.get(`/order/${orderId}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch order");
+    return data.data;
 };
 
 export const updateOrderStatus = async (orderId: number, status: string): Promise<OrderResponse> => {
-    const response = await fetch(`${API_URL}/order/${orderId}/status?status=${status}`, {
-        method: "PATCH",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to update order status");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.fetch(`/order/${orderId}/status?status=${status}`, { method: "PATCH" });
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to update order status");
+    return data.data;
 };
 
 export const cancelOrder = async (orderId: number, reason?: string): Promise<OrderResponse> => {
-    const url = new URL(`${API_URL}/order/${orderId}/cancel`);
-    if (reason) url.searchParams.append("reason", reason);
-
-    const response = await fetch(url.toString(), {
-        method: "POST",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to cancel order");
-    }
-    const json = await response.json();
-    return json.data;
+    const endpoint = reason
+        ? `/order/${orderId}/cancel?reason=${encodeURIComponent(reason)}`
+        : `/order/${orderId}/cancel`;
+    const { ok, data } = await apiClient.post(endpoint, {});
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to cancel order");
+    return data.data;
 };
 
 export const assignTechnician = async (orderId: number, technicianId: number): Promise<OrderResponse> => {
-    const response = await fetch(`${API_URL}/order/${orderId}/assign-technician?technicianId=${technicianId}`, {
-        method: "POST",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to assign technician");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.post(`/order/${orderId}/assign-technician?technicianId=${technicianId}`, {});
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to assign technician");
+    return data.data;
 };
+

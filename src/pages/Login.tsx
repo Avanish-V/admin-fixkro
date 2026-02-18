@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+import { authApi } from "@/api/auth";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,25 +19,32 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter your credentials",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Simulate login
-    setTimeout(() => {
-      if (email && password) {
-        toast({
-          title: "Welcome back!",
-          description: "Successfully logged in to RepairHub Admin",
-        });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Error",
-          description: "Please enter valid credentials",
-          variant: "destructive",
-        });
-      }
+    setIsLoading(true);
+    try {
+      await authApi.login(email, password);
+      toast({
+        title: "Welcome back!",
+        description: "Successfully logged in to RepairHub Admin",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

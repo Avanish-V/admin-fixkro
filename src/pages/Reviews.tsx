@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, Plus, Search, Edit2, Trash2, MessageSquare, Loader2 } from "lucide-react";
+import { Star, Plus, Search, Edit2, Trash2, MessageSquare, Loader2, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Review, fetchReviews, createReview, updateReview, deleteReview } from "@/api/reviews";
 import { ProductResponse, fetchAllProducts } from "@/api/products";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const StarRating = ({
   rating,
@@ -77,6 +79,9 @@ const Reviews = () => {
     productId: "",
     customerName: "",
     rating: 0,
+    technicianRating: 0,
+    isRecommended: true,
+    impressions: [] as string[],
     comment: "",
   });
   const { toast } = useToast();
@@ -122,11 +127,22 @@ const Reviews = () => {
         productId: review.productId.toString(),
         customerName: review.customerName,
         rating: review.rating,
+        technicianRating: review.technicianRating || 0,
+        isRecommended: review.isRecommended !== false,
+        impressions: review.impressions || [],
         comment: review.comment,
       });
     } else {
       setEditingReview(null);
-      setFormData({ productId: "", customerName: "", rating: 0, comment: "" });
+      setFormData({
+        productId: "",
+        customerName: "",
+        rating: 0,
+        technicianRating: 0,
+        isRecommended: true,
+        impressions: [],
+        comment: ""
+      });
     }
     setIsDialogOpen(true);
   };
@@ -296,17 +312,46 @@ const Reviews = () => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
                       <span className="font-semibold text-foreground">
                         {review.customerName}
                       </span>
-                      <StarRating rating={review.rating} />
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">Service:</span>
+                          <StarRating rating={review.rating} />
+                        </div>
+                        <div className="flex items-center gap-1 border-l border-border pl-4">
+                          <span className="text-xs text-muted-foreground">Technician:</span>
+                          <StarRating rating={review.technicianRating} />
+                        </div>
+                      </div>
+                      {review.isRecommended ? (
+                        <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-none flex items-center gap-1">
+                          <ThumbsUp className="w-3 h-3" /> Recommended
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-red-500/10 text-red-500 border-none flex items-center gap-1">
+                          <ThumbsDown className="w-3 h-3" /> Not Recommended
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-primary font-medium mb-2">
                       {review.productName}
                     </p>
-                    <p className="text-muted-foreground">{review.comment}</p>
-                    <p className="text-xs text-muted-foreground mt-3">
+                    <p className="text-muted-foreground mb-3">{review.comment}</p>
+
+                    {review.impressions && review.impressions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {review.impressions.map((imp, i) => (
+                          <Badge key={i} variant="outline" className="text-[10px] px-2 py-0">
+                            {imp}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
                       {new Date(review.createdAt).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
@@ -385,16 +430,65 @@ const Reviews = () => {
                   placeholder="Enter customer name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Rating *</Label>
-                <StarRating
-                  rating={formData.rating}
-                  onRatingChange={(rating) =>
-                    setFormData({ ...formData, rating })
-                  }
-                  interactive
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Service Rating *</Label>
+                  <StarRating
+                    rating={formData.rating}
+                    onRatingChange={(rating) =>
+                      setFormData({ ...formData, rating })
+                    }
+                    interactive
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Technician Rating *</Label>
+                  <StarRating
+                    rating={formData.technicianRating}
+                    onRatingChange={(rating) =>
+                      setFormData({ ...formData, technicianRating: rating })
+                    }
+                    interactive
+                  />
+                </div>
               </div>
+
+              <div className="flex items-center space-x-2 py-2">
+                <Checkbox
+                  id="recommended"
+                  checked={formData.isRecommended}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isRecommended: !!checked })}
+                />
+                <label
+                  htmlFor="recommended"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Customer recommends this service
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Impressions</Label>
+                <div className="flex flex-wrap gap-2">
+                  {["On Time", "Professional", "Good Support", "Reasonable Price", "Expert Clean"].map((imp) => (
+                    <Badge
+                      key={imp}
+                      variant={formData.impressions.includes(imp) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        const newImp = formData.impressions.includes(imp)
+                          ? formData.impressions.filter(i => i !== imp)
+                          : [...formData.impressions, imp];
+                        setFormData({ ...formData, impressions: newImp });
+                      }}
+                    >
+                      {formData.impressions.includes(imp) && <Check className="w-3 h-3 mr-1" />}
+                      {imp}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="comment">Review Comment *</Label>
                 <Textarea
@@ -404,7 +498,7 @@ const Reviews = () => {
                     setFormData({ ...formData, comment: e.target.value })
                   }
                   placeholder="Enter review comment"
-                  rows={4}
+                  rows={3}
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">

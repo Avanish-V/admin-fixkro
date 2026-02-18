@@ -8,6 +8,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: true,
     port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8085',
+        changeOrigin: true,
+      },
+    },
     hmr: {
       overlay: false,
     },

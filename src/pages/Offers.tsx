@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Offer, fetchOffers, deleteOffer, toggleOfferStatus } from "@/api/offers";
+import { Badge } from "@/components/ui/badge";
 
 const Offers = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -145,7 +146,21 @@ const Offers = () => {
     {
       key: "expiryDate",
       header: "Expires",
-      render: (item: Offer) => format(new Date(item.expiryDate), "MMM dd, yyyy"),
+      render: (item: Offer) => {
+        const isExpired = new Date(item.expiryDate) < new Date();
+        return (
+          <div className="flex flex-col gap-1">
+            <span className={cn(isExpired && "text-destructive line-through")}>
+              {format(new Date(item.expiryDate), "MMM dd, yyyy")}
+            </span>
+            {isExpired && (
+              <Badge variant="outline" className="text-[9px] py-0 px-1 border-destructive text-destructive w-fit">
+                Expired
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "limit",
@@ -155,7 +170,11 @@ const Offers = () => {
     {
       key: "status",
       header: "Status",
-      render: (item: Offer) => <StatusBadge status={item.status.toLowerCase() as "active" | "inactive"} />,
+      render: (item: Offer) => {
+        const isExpired = new Date(item.expiryDate) < new Date();
+        if (isExpired) return <StatusBadge status="expired" />;
+        return <StatusBadge status={item.status.toLowerCase() as "active" | "inactive"} />;
+      },
     },
     {
       key: "actions",

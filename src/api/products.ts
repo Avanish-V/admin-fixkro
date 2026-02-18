@@ -1,3 +1,4 @@
+import { apiClient } from "./apiClient";
 import { ProductDescription } from "./categories";
 
 export interface ProductResponse {
@@ -31,61 +32,32 @@ export interface UpdateProductRequest {
     descriptions: ProductDescription[];
 }
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
-
 export const fetchProductsByCategory = async (categoryId: number): Promise<ProductResponse[]> => {
-    const response = await fetch(`${API_URL}/services?categoryId=${categoryId}`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch products");
-    }
-    const json = await response.json();
-    return json.data || [];
+    const { ok, data } = await apiClient.get(`/services?categoryId=${categoryId}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch products");
+    return data.data || [];
 };
 
 export const fetchAllProducts = async (): Promise<ProductResponse[]> => {
-    const response = await fetch(`${API_URL}/services/all`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch all products");
-    }
-    const json = await response.json();
-    return json.data || [];
+    const { ok, data } = await apiClient.get("/services/all");
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch all products");
+    return data.data || [];
 };
 
 export const createProduct = async (data: CreateProductRequest): Promise<ProductResponse> => {
-    const response = await fetch(`${API_URL}/service`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to create product");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.post("/service", data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create product");
+    return resData.data;
 };
 
 export const updateProduct = async (productId: number, data: UpdateProductRequest): Promise<ProductResponse> => {
-    const response = await fetch(`${API_URL}/product/${productId}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to update product");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.put(`/product/${productId}`, data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update product");
+    return resData.data;
 };
 
 export const deleteProduct = async (productId: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/product/${productId}`, {
-        method: "DELETE",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to delete product");
-    }
+    const { ok, data } = await apiClient.delete(`/product/${productId}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete product");
 };
+

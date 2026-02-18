@@ -1,3 +1,5 @@
+import { apiClient } from "./apiClient";
+
 export interface Offer {
     id: string;
     couponCode: string;
@@ -28,72 +30,38 @@ export interface CreateOfferRequest {
     userType: "FIRST_USER" | "REGULAR";
 }
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
-
 export const fetchOffers = async (): Promise<Offer[]> => {
-    const response = await fetch(`${API_URL}/offers`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch offers");
-    }
-    const json = await response.json();
-    return json.data || [];
+    const { ok, data } = await apiClient.get("/offers");
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch offers");
+    return data.data || [];
 };
 
 export const fetchOfferById = async (id: string): Promise<Offer> => {
-    const response = await fetch(`${API_URL}/offers/${id}`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch offer");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.get(`/offers/${id}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch offer");
+    return data.data;
 };
 
 export const createOffer = async (data: CreateOfferRequest): Promise<Offer> => {
-    const response = await fetch(`${API_URL}/offers`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to create offer");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.post("/offers", data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create offer");
+    return resData.data;
 };
 
 export const updateOffer = async (id: string, data: CreateOfferRequest): Promise<Offer> => {
-    const response = await fetch(`${API_URL}/offers/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to update offer");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data: resData } = await apiClient.put(`/offers/${id}`, data);
+    if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update offer");
+    return resData.data;
 };
 
 export const toggleOfferStatus = async (id: string): Promise<Offer> => {
-    const response = await fetch(`${API_URL}/offers/${id}/toggle`, {
-        method: "PATCH",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to toggle offer status");
-    }
-    const json = await response.json();
-    return json.data;
+    const { ok, data } = await apiClient.fetch(`/offers/${id}/toggle`, { method: "PATCH" });
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to toggle offer status");
+    return data.data;
 };
 
 export const deleteOffer = async (id: string): Promise<void> => {
-    const response = await fetch(`${API_URL}/offers/${id}`, {
-        method: "DELETE",
-    });
-    if (!response.ok) {
-        throw new Error("Failed to delete offer");
-    }
+    const { ok, data } = await apiClient.delete(`/offers/${id}`);
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete offer");
 };
+

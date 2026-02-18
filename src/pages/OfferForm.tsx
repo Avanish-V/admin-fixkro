@@ -36,6 +36,7 @@ const OfferForm = () => {
   const [formData, setFormData] = useState<any>({
     couponCode: "",
     shortDescription: "",
+    targetType: "ALL", // "ALL", "CATEGORY", "PRODUCT"
     categoryId: "all",
     productId: "all",
     discountType: "PERCENTAGE",
@@ -61,9 +62,14 @@ const OfferForm = () => {
 
       if (isEditing && id) {
         const offer = await fetchOfferById(id);
+        let targetType = "ALL";
+        if (offer.productId) targetType = "PRODUCT";
+        else if (offer.categoryId) targetType = "CATEGORY";
+
         setFormData({
           couponCode: offer.couponCode,
           shortDescription: offer.shortDescription || "",
+          targetType: targetType,
           categoryId: offer.categoryId?.toString() || "all",
           productId: offer.productId?.toString() || "all",
           discountType: offer.discountType,
@@ -109,8 +115,8 @@ const OfferForm = () => {
     try {
       const payload: CreateOfferRequest = {
         ...formData,
-        categoryId: formData.categoryId === "all" ? null : parseInt(formData.categoryId),
-        productId: formData.productId === "all" ? null : parseInt(formData.productId),
+        categoryId: formData.targetType !== "ALL" && formData.categoryId !== "all" ? parseInt(formData.categoryId) : null,
+        productId: formData.targetType === "PRODUCT" && formData.productId !== "all" ? parseInt(formData.productId) : null,
         expiryDate: formData.expiryDate.toISOString(),
       };
 
@@ -253,48 +259,71 @@ const OfferForm = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <Package className="w-5 h-5 text-primary" />
-                Product Selection
+                Target Selection
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label>Offer Applies To</Label>
                   <Select
-                    value={formData.categoryId}
-                    onValueChange={handleCategoryChange}
+                    value={formData.targetType}
+                    onValueChange={(value) => setFormData({ ...formData, targetType: value, categoryId: "all", productId: "all" })}
                   >
                     <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Select target type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category.categoryId} value={category.categoryId.toString()}>
-                          {category.title}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="ALL">All Products (Global)</SelectItem>
+                      <SelectItem value="CATEGORY">Specific Category</SelectItem>
+                      <SelectItem value="PRODUCT">Specific Product</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Product *</Label>
-                  <Select
-                    value={formData.productId}
-                    onValueChange={(value) => setFormData({ ...formData, productId: value })}
-                  >
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Select a product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Products</SelectItem>
-                      {filteredProducts.map(product => (
-                        <SelectItem key={product.productId} value={product.productId.toString()}>
-                          {product.title}
+                {formData.targetType !== "ALL" && (
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select
+                      value={formData.categoryId}
+                      onValueChange={handleCategoryChange}
+                    >
+                      <SelectTrigger className="bg-secondary/50">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" disabled={formData.targetType === "PRODUCT" || formData.targetType === "CATEGORY"}>
+                          Select Category
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        {categories.map(category => (
+                          <SelectItem key={category.categoryId} value={category.categoryId.toString()}>
+                            {category.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {formData.targetType === "PRODUCT" && (
+                  <div className="space-y-2">
+                    <Label>Product *</Label>
+                    <Select
+                      value={formData.productId}
+                      onValueChange={(value) => setFormData({ ...formData, productId: value })}
+                      disabled={formData.categoryId === "all"}
+                    >
+                      <SelectTrigger className="bg-secondary/50">
+                        <SelectValue placeholder={formData.categoryId === "all" ? "Select category first" : "Select a product"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredProducts.map(product => (
+                          <SelectItem key={product.productId} value={product.productId.toString()}>
+                            {product.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </div>
 

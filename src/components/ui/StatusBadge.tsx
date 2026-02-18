@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusType = "active" | "inactive" | "pending" | "completed" | "assigning" | "assigned";
+type StatusType = "active" | "inactive" | "pending" | "completed" | "assigning" | "assigned" | "expired";
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -14,6 +14,7 @@ const statusStyles: Record<StatusType, string> = {
   completed: "bg-success/20 text-success border border-success/30",
   assigning: "status-pending",
   assigned: "status-info",
+  expired: "bg-destructive/10 text-destructive border border-destructive/20",
 };
 
 const statusLabels: Record<StatusType, string> = {
@@ -23,6 +24,7 @@ const statusLabels: Record<StatusType, string> = {
   completed: "Completed",
   assigning: "Assigning",
   assigned: "Assigned",
+  expired: "Expired",
 };
 
 export const StatusBadge = ({ status, label }: StatusBadgeProps) => {
