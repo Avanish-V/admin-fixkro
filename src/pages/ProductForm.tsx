@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Plus, X, ImageIcon, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import { fetchCategories, CategoryResponse, ProductDescription } from "@/api/categories";
 import {
   createProduct,
@@ -241,21 +242,12 @@ const ProductForm = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
-            <div className="flex gap-2">
-              <Input
-                id="image"
-                placeholder="Image URL"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="bg-secondary/50"
-              />
-              <Button variant="outline" size="icon" className="shrink-0">
-                <ImageIcon className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <ImageUpload
+            label="Product Image"
+            folder="products"
+            value={formData.imageUrl}
+            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+          />
 
           <div className="flex items-center gap-2">
             <input

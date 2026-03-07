@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCategories, createCategory, updateCategory, deleteCategory, CreateCategoryRequest } from "@/api/categories";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 interface Category {
   id: string; // This corresponds to categoryId from backend
@@ -380,24 +381,14 @@ const Categories = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-4">
-                        <Input
-                          placeholder="https://example.com/icon.png"
-                          value={formData.iconUrl}
-                          onChange={(e) => setFormData({ ...formData, iconUrl: e.target.value })}
-                          className="bg-secondary/50 flex-1"
-                        />
-                        {formData.iconUrl && (
-                          <div
-                            className="w-12 h-12 rounded-lg flex items-center justify-center border border-border"
-                            style={{ backgroundColor: `${formData.themeColor}20` }}
-                          >
-                            <img src={formData.iconUrl} alt="Icon preview" className="w-6 h-6 object-contain" />
-                          </div>
-                        )}
-                      </div>
+                      <ImageUpload
+                        label="Icon Image"
+                        folder="categories"
+                        value={formData.iconUrl}
+                        onChange={(url) => setFormData({ ...formData, iconUrl: url })}
+                      />
                       <p className="text-xs text-muted-foreground">
-                        Enter a URL for the category icon (PNG, JPG, or SVG)
+                        Upload an image or enter a URL for the category icon (PNG, JPG, or SVG)
                       </p>
                     </div>
                   )}
