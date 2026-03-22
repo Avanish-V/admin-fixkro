@@ -1,5 +1,16 @@
 import { apiClient } from "./apiClient";
 
+export interface UserAddress {
+  id: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+}
+
 export interface UserResponse {
   id: string;
   name: string;
@@ -9,6 +20,7 @@ export interface UserResponse {
   createdAt: string;
   status: boolean;
   ordersCount: number;
+  address?: UserAddress;
 }
 
 export interface UsersListResponse {
