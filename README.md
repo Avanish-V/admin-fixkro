@@ -1,5 +1,4 @@
 # FixKro Admin Panel
-
 The official administration dashboard for FixKro - Home appliance repair and maintenance services.
 
 ## Technologies
