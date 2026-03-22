@@ -12,6 +12,7 @@ import {
   MapPin,
   Star,
   ChevronLeft,
+  UserCircle,
   ChevronRight,
   Wrench,
   LogOut,
