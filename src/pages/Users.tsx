@@ -107,13 +107,11 @@ const Users = () => {
           )}
         </div>
 
-        {
-          <DataTable
-            columns={columns}
-            data={data?.users || []}
-            keyExtractor={(item) => item.id}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={data?.users || []}
+          keyExtractor={(item) => item.id}
+        />
       </motion.div>
     </AdminLayout>
   );
