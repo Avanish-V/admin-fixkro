@@ -31,4 +31,4 @@ The official administration dashboard for FixKro - Home appliance repair and mai
 
 Control the API environment in the `.env` file:
 - `VITE_IS_LOCAL=true`: Connects to `localhost:8085`
-- `VITE_IS_LOCAL=false`: Connects to Production Lambda URL
+- `VITE_IS_LOCAL=false`: Connects to Production Lambda
