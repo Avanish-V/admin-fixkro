@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
   { icon: Users, label: "Professionals", path: "/professionals" },
   { icon: MapPin, label: "Cities", path: "/cities" },
   { icon: Star, label: "Reviews", path: "/reviews" },
+  { icon: UserCircle, label: "Users", path: "/users" },
 ];
 
 // Context for sidebar collapsed state
