@@ -1,43 +1,29 @@
 import { apiClient } from "./apiClient";
 
-export interface UserAddress {
-  id: string;
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-}
-
 export interface UserResponse {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
+  id: number;
+  firebaseUid: String;
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  role: 'USER' | 'ADMIN' | 'PROFESSIONAL';
+  status: 'ACTIVE' | 'INACTIVE' | 'BANNED';
+  createdAt: string | null;
+  updatedAt: string | null;
+  // Temporary fields for compatibility with existing components
   avatar?: string;
-  createdAt: string;
-  status: boolean;
-  ordersCount: number;
-  address?: UserAddress;
 }
 
-export interface UsersListResponse {
-  users: UserResponse[];
-  totalCount: number;
-}
-
-export const fetchUsers = async (): Promise<UsersListResponse> => {
+export const fetchUsers = async (): Promise<UserResponse[]> => {
   const { ok, data } = await apiClient.get("/users");
   if (!ok || !data.success) {
     throw new Error(data.error?.message || "Failed to fetch users");
   }
-  return data.data;
+  return data.data; // Backend returns List<UserResponse> wrapped in ApiResponse.success
 };
 
-export const fetchUserById = async (id: string): Promise<UserResponse> => {
-  const { ok, data } = await apiClient.get(`/users/${id}`);
+export const fetchUserByUid = async (uid: string): Promise<UserResponse> => {
+  const { ok, data } = await apiClient.get(`/users/${uid}`);
   if (!ok || !data.success) {
     throw new Error(data.error?.message || "Failed to fetch user");
   }
