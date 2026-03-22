@@ -27,17 +27,19 @@ import { fetchCategories, CategoryResponse } from "@/api/categories";
 import {
   fetchProductsByCategory,
   deleteProduct,
+  toggleProductStatus,
   ProductResponse,
 } from "@/api/products";
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     loadCategories();
@@ -57,14 +59,14 @@ const Products = () => {
 
   useEffect(() => {
     if (selectedCategoryId !== null) {
-      loadProducts(selectedCategoryId);
+      loadProducts(selectedCategoryId, statusFilter);
     }
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, statusFilter]);
 
-  const loadProducts = async (categoryId: number) => {
+  const loadProducts = async (categoryId: number, status?: string) => {
     setIsLoading(true);
     try {
-      const data = await fetchProductsByCategory(categoryId);
+      const data = await fetchProductsByCategory(categoryId, status);
       setProducts(data);
     } catch (error) {
       toast({ title: "Error", description: "Failed to load products", variant: "destructive" });
@@ -81,6 +83,29 @@ const Products = () => {
       if (selectedCategoryId !== null) loadProducts(selectedCategoryId);
     } catch (error) {
       toast({ title: "Error", description: "Failed to delete product", variant: "destructive" });
+    }
+  };
+
+  const handleToggleStatus = async (productId: number, currentStatus: boolean, title: string) => {
+    try {
+      const newStatus = !currentStatus;
+      await toggleProductStatus(productId, newStatus);
+
+      // Update local state
+      setProducts(prev => prev.map(p =>
+        p.productId === productId ? { ...p, status: newStatus } : p
+      ));
+
+      toast({
+        title: newStatus ? "Activated" : "Deactivated",
+        description: `${title} is now ${newStatus ? "active" : "inactive"}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update product status",
+        variant: "destructive"
+      });
     }
   };
 
@@ -113,6 +138,24 @@ const Products = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-center gap-2 bg-card p-2 rounded-xl border border-border">
+              <Label className="text-muted-foreground ml-2 text-sm">Status:</Label>
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-[120px] bg-secondary/50 border-none">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -131,7 +174,7 @@ const Products = () => {
           {selectedCategoryId && (
             <Badge variant="secondary" className="gap-1">
               {selectedCategoryName}
-              <button 
+              <button
                 onClick={() => setSelectedCategoryId(categories[0]?.categoryId || null)}
                 className="ml-1 hover:text-destructive"
               >
@@ -209,12 +252,7 @@ const Products = () => {
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={product.status}
-                          onCheckedChange={() => {
-                            toast({
-                              title: product.status ? "Deactivated" : "Activated",
-                              description: `${product.title} is now ${product.status ? "inactive" : "active"}`,
-                            });
-                          }}
+                          onCheckedChange={() => handleToggleStatus(product.productId, product.status, product.title)}
                         />
                         <span className={`text-xs font-medium ${product.status ? "text-green-500" : "text-muted-foreground"}`}>
                           {product.status ? "Active" : "Inactive"}

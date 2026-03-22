@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const isLocal = import.meta.env.VITE_IS_LOCAL === "true";
+const API_URL = isLocal
+    ? import.meta.env.VITE_LOCAL_API_URL
+    : import.meta.env.VITE_PRODUCTION_API_URL;
 
 export const apiClient = {
     fetch: async (endpoint: string, options: RequestInit = {}) => {

@@ -43,9 +43,9 @@ interface SidebarContextType {
   setCollapsed: (v: boolean) => void;
 }
 
-const SidebarContext = createContext<SidebarContextType>({ 
-  collapsed: false, 
-  setCollapsed: () => {} 
+const SidebarContext = createContext<SidebarContextType>({
+  collapsed: false,
+  setCollapsed: () => { }
 });
 
 export const useSidebarCollapsed = () => useContext(SidebarContext);
@@ -56,7 +56,7 @@ interface SidebarProviderProps {
 
 export const SidebarProvider = ({ children }: SidebarProviderProps) => {
   const [collapsed, setCollapsed] = useState(false);
-  
+
   return (
     <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
       {children}
@@ -79,11 +79,11 @@ export const AdminSidebar = () => {
       <div className="p-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
           <motion.div
-            className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center"
+            className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Wrench className="w-5 h-5 text-primary-foreground" />
+            <span className="text-white font-black text-sm">FK</span>
           </motion.div>
           <AnimatePresence mode="wait">
             {!collapsed && (
@@ -92,9 +92,10 @@ export const AdminSidebar = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
+                className="flex items-center"
               >
-                <h1 className="font-bold text-lg text-foreground">RepairHub</h1>
-                <p className="text-xs text-muted-foreground">Admin Panel</p>
+                <span className="text-xl font-black text-primary">Fix</span>
+                <span className="text-xl font-black text-[#FFB300]">Kro</span>
               </motion.div>
             )}
           </AnimatePresence>

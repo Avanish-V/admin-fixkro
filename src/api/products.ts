@@ -32,14 +32,18 @@ export interface UpdateProductRequest {
     descriptions: ProductDescription[];
 }
 
-export const fetchProductsByCategory = async (categoryId: number): Promise<ProductResponse[]> => {
-    const { ok, data } = await apiClient.get(`/services?categoryId=${categoryId}`);
+export const fetchProductsByCategory = async (categoryId: number, status?: string): Promise<ProductResponse[]> => {
+    let url = `/services?categoryId=${categoryId}`;
+    if (status) url += `&status=${status}`;
+    const { ok, data } = await apiClient.get(url);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch products");
     return data.data || [];
 };
 
-export const fetchAllProducts = async (): Promise<ProductResponse[]> => {
-    const { ok, data } = await apiClient.get("/services/all");
+export const fetchAllProducts = async (status?: string): Promise<ProductResponse[]> => {
+    let url = "/services/all";
+    if (status) url += `?status=${status}`;
+    const { ok, data } = await apiClient.get(url);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch all products");
     return data.data || [];
 };
@@ -59,5 +63,11 @@ export const updateProduct = async (productId: number, data: UpdateProductReques
 export const deleteProduct = async (productId: number): Promise<void> => {
     const { ok, data } = await apiClient.delete(`/product/${productId}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete product");
+};
+
+export const toggleProductStatus = async (productId: number, status: boolean): Promise<ProductResponse> => {
+    const { ok, data } = await apiClient.patch(`/product/${productId}/status?status=${status}`, {});
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to toggle status");
+    return data.data;
 };
 

@@ -33,7 +33,7 @@ const Login = () => {
       await authApi.login(email, password);
       toast({
         title: "Welcome back!",
-        description: "Successfully logged in to RepairHub Admin",
+        description: "Successfully logged in to FixKro Admin",
       });
       navigate("/dashboard");
     } catch (error: any) {
@@ -73,20 +73,21 @@ const Login = () => {
 
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-12">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            className="w-24 h-24 rounded-3xl bg-gradient-primary flex items-center justify-center mb-8 animate-float"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center mb-8"
           >
-            <Wrench className="w-12 h-12 text-primary-foreground" />
+            <span className="text-5xl font-extrabold text-primary">Fix</span>
+            <span className="text-5xl font-extrabold text-[#FFB300]">Kro</span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl font-bold text-foreground mb-4 text-center"
+            className="text-2xl font-bold text-foreground mb-4 text-center"
           >
-            RepairHub Admin
+            Admin Panel
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -133,10 +134,11 @@ const Login = () => {
             transition={{ delay: 0.2 }}
             className="text-center mb-8 lg:hidden"
           >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-4">
-              <Wrench className="w-8 h-8 text-primary-foreground" />
+            <div className="flex items-center justify-center mx-auto mb-2">
+              <span className="text-3xl font-extrabold text-primary">Fix</span>
+              <span className="text-3xl font-extrabold text-[#FFB300]">Kro</span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">RepairHub Admin</h1>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Admin</p>
           </motion.div>
 
           <motion.div
@@ -158,7 +160,7 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@repairhub.com"
+                    placeholder="admin@fixkro.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 bg-secondary/50 border-border/50 input-glow"
