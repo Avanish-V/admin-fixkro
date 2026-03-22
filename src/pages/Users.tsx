@@ -107,15 +107,7 @@ const Users = () => {
           )}
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center h-64 text-destructive">
-            <p>Error loading users. Please try again.</p>
-          </div>
-        ) : (
+        {
           <DataTable
             columns={columns}
             data={data?.users || []}
