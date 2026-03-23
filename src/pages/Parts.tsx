@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -25,55 +32,75 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, Cog } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Cog, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface Category {
+  categoryId: number;
+  title: string;
+}
 
 interface Part {
   partId: number;
   name: string;
   price: number;
+  categoryId: number;
   status: boolean;
 }
 
+const dummyCategories: Category[] = [
+  { categoryId: 1, title: "AC" },
+  { categoryId: 2, title: "Washing Machine" },
+  { categoryId: 3, title: "Refrigerator" },
+  { categoryId: 4, title: "Microwave" },
+  { categoryId: 5, title: "Water Purifier" },
+];
+
 const initialParts: Part[] = [
-  { partId: 1, name: "Compressor", price: 4500, status: true },
-  { partId: 2, name: "Capacitor", price: 350, status: true },
-  { partId: 3, name: "Fan Motor", price: 1200, status: true },
-  { partId: 4, name: "Thermostat", price: 800, status: true },
-  { partId: 5, name: "PCB Board", price: 2500, status: false },
-  { partId: 6, name: "Gas Charging Kit", price: 1800, status: true },
-  { partId: 7, name: "Drain Pump", price: 950, status: true },
-  { partId: 8, name: "Heating Element", price: 1100, status: false },
+  { partId: 1, name: "Compressor", price: 4500, categoryId: 1, status: true },
+  { partId: 2, name: "Capacitor", price: 350, categoryId: 1, status: true },
+  { partId: 3, name: "Fan Motor", price: 1200, categoryId: 1, status: true },
+  { partId: 4, name: "Thermostat", price: 800, categoryId: 3, status: true },
+  { partId: 5, name: "PCB Board", price: 2500, categoryId: 2, status: false },
+  { partId: 6, name: "Gas Charging Kit", price: 1800, categoryId: 1, status: true },
+  { partId: 7, name: "Drain Pump", price: 950, categoryId: 2, status: true },
+  { partId: 8, name: "Heating Element", price: 1100, categoryId: 4, status: false },
 ];
 
 const Parts = () => {
   const { toast } = useToast();
   const [parts, setParts] = useState<Part[]>(initialParts);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<Part | null>(null);
   const [deletingPart, setDeletingPart] = useState<Part | null>(null);
-  const [formData, setFormData] = useState({ name: "", price: 0, status: true });
+  const [formData, setFormData] = useState({ name: "", price: 0, categoryId: 0, status: true });
 
-  const filteredParts = parts.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getCategoryName = (categoryId: number) =>
+    dummyCategories.find((c) => c.categoryId === categoryId)?.title || "Unknown";
+
+  const filteredParts = parts.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === "all" || p.categoryId === parseInt(filterCategory);
+    return matchesSearch && matchesCategory;
+  });
 
   const openAddDialog = () => {
     setEditingPart(null);
-    setFormData({ name: "", price: 0, status: true });
+    setFormData({ name: "", price: 0, categoryId: 0, status: true });
     setDialogOpen(true);
   };
 
   const openEditDialog = (part: Part) => {
     setEditingPart(part);
-    setFormData({ name: part.name, price: part.price, status: part.status });
+    setFormData({ name: part.name, price: part.price, categoryId: part.categoryId, status: part.status });
     setDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.price) {
+    if (!formData.name || !formData.price || !formData.categoryId) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
@@ -115,6 +142,15 @@ const Parts = () => {
       header: "Part Name",
       render: (part: Part) => (
         <span className="font-medium text-foreground">{part.name}</span>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (part: Part) => (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground">
+          {getCategoryName(part.categoryId)}
+        </span>
       ),
     },
     {
@@ -169,7 +205,7 @@ const Parts = () => {
       >
         <PageHeader
           title="Parts"
-          description="Manage spare parts and pricing"
+          description="Manage spare parts and pricing by category"
           action={{ label: "Add Part", onClick: openAddDialog, icon: Plus }}
         />
 
@@ -181,20 +217,36 @@ const Parts = () => {
             icon={Cog}
           />
           <StatsCard
-            title="Avg Price"
-            value={`₹${Math.round(parts.reduce((s, p) => s + p.price, 0) / parts.length).toLocaleString()}`}
-            icon={Cog}
+            title="Categories"
+            value={dummyCategories.length}
+            icon={Filter}
           />
         </div>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search parts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-secondary/50"
-          />
+        {/* Search + Category Filter */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search parts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-secondary/50"
+            />
+          </div>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-[200px] bg-secondary/50">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {dummyCategories.map((cat) => (
+                <SelectItem key={cat.categoryId} value={cat.categoryId.toString()}>
+                  {cat.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <DataTable
@@ -211,6 +263,24 @@ const Parts = () => {
             <DialogTitle>{editingPart ? "Edit Part" : "Add Part"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Select
+                value={formData.categoryId ? formData.categoryId.toString() : ""}
+                onValueChange={(value) => setFormData({ ...formData, categoryId: parseInt(value) })}
+              >
+                <SelectTrigger className="bg-secondary/50">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dummyCategories.map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId.toString()}>
+                      {cat.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="partName">Part Name *</Label>
               <Input
