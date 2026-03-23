@@ -128,7 +128,7 @@ const Parts = () => {
       key: "status",
       header: "Status",
       render: (part: Part) => (
-        <StatusBadge status={part.status ? "Active" : "Inactive"} />
+        <StatusBadge status={part.status ? "active" : "inactive"} />
       ),
     },
     {
