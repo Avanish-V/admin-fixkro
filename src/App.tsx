@@ -20,6 +20,7 @@ import ProfessionalForm from "./pages/ProfessionalForm";
 import Cities from "./pages/Cities";
 import Reviews from "./pages/Reviews";
 import Users from "./pages/Users";
+import Parts from "./pages/Parts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
