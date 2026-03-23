@@ -17,6 +17,7 @@ import {
   Wrench,
   LogOut,
   Settings,
+  Cog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
