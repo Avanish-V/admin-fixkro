@@ -167,11 +167,11 @@ const Parts = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-8"
       >
-        <PageHeader title="Parts" subtitle="Manage spare parts and pricing">
-          <Button onClick={openAddDialog} className="btn-gradient gap-2">
-            <Plus className="w-4 h-4" /> Add Part
-          </Button>
-        </PageHeader>
+        <PageHeader
+          title="Parts"
+          description="Manage spare parts and pricing"
+          action={{ label: "Add Part", onClick: openAddDialog, icon: Plus }}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatsCard title="Total Parts" value={parts.length} icon={Cog} />
