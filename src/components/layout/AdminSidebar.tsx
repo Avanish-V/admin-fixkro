@@ -17,6 +17,7 @@ import {
   Wrench,
   LogOut,
   Settings,
+  Cog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { icon: CreditCard, label: "Transactions", path: "/transactions" },
   { icon: Users, label: "Professionals", path: "/professionals" },
   { icon: MapPin, label: "Cities", path: "/cities" },
+  { icon: Cog, label: "Parts", path: "/parts" },
   { icon: Star, label: "Reviews", path: "/reviews" },
   { icon: UserCircle, label: "Users", path: "/users" },
 ];

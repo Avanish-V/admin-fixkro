@@ -20,6 +20,7 @@ import ProfessionalForm from "./pages/ProfessionalForm";
 import Cities from "./pages/Cities";
 import Reviews from "./pages/Reviews";
 import Users from "./pages/Users";
+import Parts from "./pages/Parts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/cities" element={<Cities />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/parts" element={<Parts />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
