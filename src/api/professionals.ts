@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient";
 
 export interface ProfessionalResponse {
     id: number;
+    firebaseUid: string;
     name: string;
     photo: string;
     mobile: string;
@@ -15,6 +16,7 @@ export interface ProfessionalResponse {
 }
 
 export interface CreateProfessionalRequest {
+    firebaseUid: string;
     name: string;
     photo: string;
     mobile: string;
@@ -25,6 +27,7 @@ export interface CreateProfessionalRequest {
 }
 
 export interface UpdateProfessionalRequest {
+    firebaseUid: string;
     name: string;
     photo: string;
     mobile: string;

@@ -21,6 +21,8 @@ export interface OrderResponse {
     technicianId: number | null;
     technicianName: string | null;
     technicianPhoto: string | null;
+    technicianUid: string | null;
+    technicianPhone: string | null;
     price: number;
     tax: number;
     offerId?: number;
@@ -67,6 +69,12 @@ export const cancelOrder = async (orderId: number, reason?: string): Promise<Ord
 export const assignTechnician = async (orderId: number, technicianId: number): Promise<OrderResponse> => {
     const { ok, data } = await apiClient.post(`/order/${orderId}/assign-technician?technicianId=${technicianId}`, {});
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to assign technician");
+    return data.data;
+};
+
+export const unassignTechnician = async (orderId: number): Promise<OrderResponse> => {
+    const { ok, data } = await apiClient.post(`/order/${orderId}/unassign-technician`, {});
+    if (!ok || !data.success) throw new Error(data.error?.message || "Failed to unassign technician");
     return data.data;
 };
 

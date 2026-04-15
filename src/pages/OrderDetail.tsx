@@ -23,9 +23,18 @@ import {
   Mail,
   XCircle,
   Loader2,
+  CheckCircle2,
+  MessageSquare,
+  ShieldCheck,
+  Star,
+  UserMinus,
+  Trash2
 } from "lucide-react";
-import { fetchOrder, updateOrderStatus, cancelOrder, assignTechnician, OrderResponse as Order } from "@/api/orders";
+import { fetchOrder, updateOrderStatus, cancelOrder, assignTechnician, unassignTechnician, OrderResponse as Order } from "@/api/orders";
 import { fetchProfessionals } from "@/api/professionals";
+import { ProfessionalSelectorDialog } from "@/components/orders/ProfessionalSelectorDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -75,10 +84,21 @@ const OrderDetail = () => {
     mutationFn: (techId: number) => assignTechnician(orderId, techId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-      toast.success("Professional assigned successfully");
+      toast.success("Professional assigned and notification alert sent!");
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Failed to assign professional");
+    }
+  });
+
+  const unassignMutation = useMutation({
+    mutationFn: () => unassignTechnician(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      toast.success("Professional removed from order");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to remove professional");
     }
   });
 
@@ -321,42 +341,107 @@ const OrderDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Professional Assignment */}
-            <div className="glass-card p-6">
-              <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-                <UserCheck className="w-5 h-5 text-primary" /> Assigned Professional
-              </h3>
-              {order.technicianId ? (
-                <div className="p-4 rounded-xl bg-success/10 border border-success/30">
-                  <p className="font-semibold text-success">{order.technicianName || `Technician #${order.technicianId}`}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Currently assigned</p>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="p-0 h-auto mt-2"
-                    onClick={() => {
-                      const nextIndex = professionals.findIndex(p => p.id === order.technicianId) + 1;
-                      const nextId = professionals[nextIndex % professionals.length]?.id;
-                      if (nextId) assignMutation.mutate(nextId);
-                    }}
-                  >
-                    Change Professional
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">No professional assigned yet</p>
-                  <Select onValueChange={(val) => assignMutation.mutate(parseInt(val))}>
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Select Professional" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {professionals.map((prof) => (
-                        <SelectItem key={prof.id} value={prof.id.toString()}>
-                          {prof.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <div className="glass-card p-6 overflow-hidden relative">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-primary" /> Assigned Professional
+                </h3>
+              </div>
+              
+              {order.technicianId ? (() => {
+                const assignedProf = professionals.find(p => p.id === order.technicianId);
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4 group">
+                      <Avatar className="w-16 h-16 border-2 border-primary/20 ring-4 ring-primary/5">
+                        <AvatarImage src={order.technicianPhoto || assignedProf?.photo} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(order.technicianName || "T").slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-foreground text-lg truncate hover:text-primary transition-colors cursor-pointer">
+                          {order.technicianName || assignedProf?.name || `Tech #${order.technicianId}`}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="bg-success/20 text-success border-success/30 px-2 py-0 h-5 text-[10px] uppercase font-black">
+                            Active
+                          </Badge>
+                          <div className="flex items-center text-xs font-bold text-amber-500">
+                             <Star className="w-3 h-3 fill-current mr-0.5" />
+                             {(assignedProf?.rating ?? 5.0).toFixed(1)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-dashed border-border/60">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground bg-secondary/30 p-2 rounded-lg">
+                        <div className="flex items-center gap-2 pr-2 border-r border-border/50 flex-1">
+                           <Phone className="w-3 h-3" />
+                           <span className="font-medium text-foreground">{assignedProf?.mobile || "No Mobile"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 pl-2 flex-1">
+                           <ShieldCheck className="w-3 h-3 text-primary" />
+                           <span className="font-medium text-foreground">Verified ID</span>
+                        </div>
+                      </div>
+
+                      {assignedProf?.expertise && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {assignedProf.expertise.slice(0, 3).map((exp, idx) => (
+                            <Badge key={idx} variant="outline" className="text-[9px] bg-primary/5 text-primary/80 border-primary/20 hover:bg-primary/10 py-0">
+                              {exp}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 flex gap-2">
+                       <ProfessionalSelectorDialog 
+                         professionals={professionals}
+                         currentlyAssignedId={order.technicianId}
+                         onSelect={(techId) => assignMutation.mutate(techId)}
+                         trigger={
+                           <Button variant="outline" size="sm" className="flex-1 text-xs hover:bg-secondary/40 h-10 gap-2 border-dashed">
+                             <MessageSquare className="w-3 h-3" /> Change
+                           </Button>
+                         }
+                       />
+                       <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         onClick={() => {
+                           if (confirm("Are you sure you want to remove this professional from the order?")) {
+                             unassignMutation.mutate();
+                           }
+                         }}
+                         className="h-10 text-destructive hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20"
+                       >
+                         <UserMinus className="w-4 h-4" />
+                       </Button>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 rounded-xl bg-secondary/20 border border-dashed border-border/60">
+                  <div className="w-12 h-12 rounded-full bg-secondary/40 flex items-center justify-center text-muted-foreground/60 ring-8 ring-secondary/10">
+                    <UserCheck className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium text-foreground">No Professional Assigned</p>
+                    <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">Assign a verified professional to start this service order.</p>
+                  </div>
+                  <ProfessionalSelectorDialog 
+                    professionals={professionals}
+                    onSelect={(techId) => assignMutation.mutate(techId)}
+                    trigger={
+                      <Button className="btn-gradient w-40 text-xs shadow-lg h-9">
+                         Pick Professional
+                      </Button>
+                    }
+                  />
                 </div>
               )}
             </div>

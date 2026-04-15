@@ -82,9 +82,10 @@ const Professionals = () => {
   };
 
   const handleToggleStatus = async (professional: ProfessionalResponse) => {
-    const newStatus = professional.status === "active" ? "inactive" : "active";
+    const newStatus = professional.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
       await updateProfessional(professional.id, {
+        firebaseUid: professional.firebaseUid,
         name: professional.name,
         photo: professional.photo,
         mobile: professional.mobile,
@@ -206,7 +207,7 @@ const Professionals = () => {
                       <div className="space-y-1 text-sm">
                         <div className="flex items-center gap-1.5">
                           <Award className="w-3.5 h-3.5 text-warning" />
-                          <span className="font-medium">{professional.rating.toFixed(1)}</span>
+                          <span className="font-medium">{(professional.rating ?? 0).toFixed(1)}</span>
                         </div>
                         <p className="text-muted-foreground">{professional.completedJobs} jobs</p>
                       </div>
@@ -238,7 +239,7 @@ const Professionals = () => {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleToggleStatus(professional)}
-                          className={`p-2 rounded-lg transition-colors ${professional.status === "active"
+                          className={`p-2 rounded-lg transition-colors ${professional.status === "ACTIVE"
                             ? "bg-success/10 text-success hover:bg-success/20"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}

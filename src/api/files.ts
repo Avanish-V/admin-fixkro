@@ -1,15 +1,34 @@
 import { apiClient } from "./apiClient";
 
 export const uploadFile = async (file: File, folder: string = "general"): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", folder);
+    // 1. Get extension and content type
+    const extension = file.name.split('.').pop() || "bin";
+    const contentType = file.type || "application/octet-stream";
 
-    const response = await apiClient.post("/files/upload", formData);
+    // 2. Request presigned URL from backend
+    const presignedResponse = await apiClient.get<{uploadUrl: string, publicUrl: string}>(
+        `/files/presigned-put-url?folder=${folder}&extension=${extension}&contentType=${encodeURIComponent(contentType)}`
+    );
 
-    if (!response.ok) {
-        throw new Error(response.data.error?.message || "Failed to upload file");
+    if (!presignedResponse.ok || !presignedResponse.data.data) {
+        throw new Error(presignedResponse.data.error?.message || "Failed to initiate file upload");
     }
 
-    return response.data.data;
+    const { uploadUrl, publicUrl } = presignedResponse.data.data;
+
+    // 3. Upload directly to S3 via PUT
+    const s3Response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+            "Content-Type": contentType
+        },
+        body: file
+    });
+
+    if (!s3Response.ok) {
+        throw new Error(`Failed to upload to S3: ${s3Response.statusText}`);
+    }
+
+    // 4. Return the final public URL
+    return publicUrl;
 };

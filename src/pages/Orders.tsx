@@ -25,6 +25,7 @@ import {
   Calendar,
   ChevronRight,
   UserCheck,
+  AlertCircle,
 } from "lucide-react";
 import { fetchAllOrders, updateOrderStatus, OrderResponse } from "@/api/orders";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ const Orders = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, error, refetch } = useQuery({
     queryKey: ["orders"],
     queryFn: fetchAllOrders,
   });
@@ -56,18 +57,12 @@ const Orders = () => {
   });
 
   const handleStatusChange = (orderId: number, newStatus: string) => {
-    // Map frontend status to backend status if needed
-    // The UI uses assigning, assigned, completed
-    // Backend uses CREATED, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED
     let backendStatus = newStatus.toUpperCase();
     if (backendStatus === "ASSIGNING") backendStatus = "CREATED";
-
     statusMutation.mutate({ orderId, status: backendStatus });
   };
 
   const handleAssignProfessional = (orderId: number, professional: string) => {
-    // For now we just update status to ASSIGNED as professional assignment 
-    // might need a different endpoint or technicianId field update
     statusMutation.mutate({ orderId, status: "ASSIGNED" });
   };
 
@@ -77,6 +72,29 @@ const Orders = () => {
         <PageHeader title="Orders" description="Loading orders..." />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <PageHeader title="Orders" description="View and manage customer orders" />
+        <div className="glass-card p-12 text-center flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Failed to load orders</h3>
+          <p className="text-muted-foreground max-w-md mb-6">
+            {(error as Error).message || "An unexpected error occurred while fetching orders."}
+          </p>
+          <button 
+            onClick={() => refetch()}
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-medium"
+          >
+            Retry Connection
+          </button>
         </div>
       </AdminLayout>
     );

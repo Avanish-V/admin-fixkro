@@ -25,6 +25,7 @@ const ProfessionalForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
+    firebaseUid: "",
     name: "",
     mobile: "",
     address: "",
@@ -45,6 +46,7 @@ const ProfessionalForm = () => {
     try {
       const professional = await fetchProfessionalById(profId);
       setFormData({
+        firebaseUid: professional.firebaseUid,
         name: professional.name,
         mobile: professional.mobile,
         address: professional.address,
@@ -74,7 +76,7 @@ const ProfessionalForm = () => {
     setIsLoading(true);
     try {
       if (isEditing) {
-        await updateProfessional(parseInt(id!), { ...payload, status: "active" } as UpdateProfessionalRequest);
+        await updateProfessional(parseInt(id!), { ...payload, status: "ACTIVE" } as UpdateProfessionalRequest);
         toast({ title: "Success", description: "Professional updated successfully" });
       } else {
         await createProfessional(payload as CreateProfessionalRequest);
@@ -144,6 +146,18 @@ const ProfessionalForm = () => {
               value={formData.idPhoto}
               onChange={(url) => setFormData(prev => ({ ...prev, idPhoto: url }))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="firebaseUid">Partner UID (Firebase) *</Label>
+            <Input
+              id="firebaseUid"
+              placeholder="Enter professional's Firebase UID"
+              value={formData.firebaseUid}
+              onChange={(e) => setFormData({ ...formData, firebaseUid: e.target.value })}
+              className="bg-secondary/50 font-mono"
+            />
+            <p className="text-[10px] text-muted-foreground">Mandatory for assigning jobs to the mobile app.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
