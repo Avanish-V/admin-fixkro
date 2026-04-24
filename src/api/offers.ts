@@ -2,7 +2,7 @@ import { apiClient } from "./apiClient";
 
 export interface Offer {
     id: string;
-    couponCode: string;
+    offerCode: string;
     shortDescription?: string;
     categoryId: string | null;
     categoryName: string | null;
@@ -19,7 +19,7 @@ export interface Offer {
 }
 
 export interface CreateOfferRequest {
-    couponCode: string;
+    offerCode: string;
     shortDescription?: string;
     categoryId: string | null;
     productId: string | null;
@@ -31,37 +31,37 @@ export interface CreateOfferRequest {
 }
 
 export const fetchOffers = async (): Promise<Offer[]> => {
-    const { ok, data } = await apiClient.get("/offers");
+    const { ok, data } = await apiClient.get("/admin/offers");
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch offers");
     return data.data || [];
 };
 
 export const fetchOfferById = async (id: string): Promise<Offer> => {
-    const { ok, data } = await apiClient.get(`/offers/${id}`);
+    const { ok, data } = await apiClient.get(`/admin/offers/${id}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch offer");
     return data.data;
 };
 
 export const createOffer = async (data: CreateOfferRequest): Promise<Offer> => {
-    const { ok, data: resData } = await apiClient.post("/offers", data);
+    const { ok, data: resData } = await apiClient.post("/admin/offers", data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create offer");
     return resData.data;
 };
 
 export const updateOffer = async (id: string, data: CreateOfferRequest): Promise<Offer> => {
-    const { ok, data: resData } = await apiClient.put(`/offers/${id}`, data);
+    const { ok, data: resData } = await apiClient.put(`/admin/offers/${id}`, data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update offer");
     return resData.data;
 };
 
 export const toggleOfferStatus = async (id: string): Promise<Offer> => {
-    const { ok, data } = await apiClient.fetch(`/offers/${id}/toggle`, { method: "PATCH" });
+    const { ok, data } = await apiClient.fetch(`/admin/offers/${id}/toggle`, { method: "PATCH" });
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to toggle offer status");
     return data.data;
 };
 
 export const deleteOffer = async (id: string): Promise<void> => {
-    const { ok, data } = await apiClient.delete(`/offers/${id}`);
+    const { ok, data } = await apiClient.delete(`/admin/offers/${id}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete offer");
 };
 

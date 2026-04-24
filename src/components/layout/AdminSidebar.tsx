@@ -18,6 +18,7 @@ import {
   LogOut,
   Settings,
   Cog,
+  Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { icon: Tags, label: "Offers", path: "/offers" },
   { icon: ShoppingCart, label: "Orders", path: "/orders" },
   { icon: CreditCard, label: "Transactions", path: "/transactions" },
+  { icon: Banknote, label: "Withdrawals", path: "/withdrawals" },
   { icon: Users, label: "Professionals", path: "/professionals" },
   { icon: MapPin, label: "Cities", path: "/cities" },
   { icon: Cog, label: "Parts", path: "/parts" },

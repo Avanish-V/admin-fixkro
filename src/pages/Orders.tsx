@@ -33,7 +33,7 @@ import { toast } from "sonner";
 
 // Orders Page
 
-const professionals = ["Mike Thompson", "David Wilson", "James Brown", "Sarah Lee", "Tom Harris"];
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -56,15 +56,7 @@ const Orders = () => {
     }
   });
 
-  const handleStatusChange = (orderId: number, newStatus: string) => {
-    let backendStatus = newStatus.toUpperCase();
-    if (backendStatus === "ASSIGNING") backendStatus = "CREATED";
-    statusMutation.mutate({ orderId, status: backendStatus });
-  };
 
-  const handleAssignProfessional = (orderId: number, professional: string) => {
-    statusMutation.mutate({ orderId, status: "ASSIGNED" });
-  };
 
   if (isLoading) {
     return (
@@ -112,8 +104,8 @@ const Orders = () => {
               <TableHead className="text-muted-foreground font-semibold">Customer</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Service</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Amount</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Professional</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Payment</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Order Status</TableHead>
               <TableHead className="text-muted-foreground font-semibold text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -133,7 +125,7 @@ const Orders = () => {
                       <Package className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{order.orderId}</p>
+                      <p className="font-bold text-foreground">#{order.orderId}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Calendar className="w-3 h-3" /> {new Date(order.createdAt).toLocaleDateString()}
                       </p>
@@ -157,46 +149,12 @@ const Orders = () => {
                 <TableCell>
                   <p className="font-semibold text-foreground">₹{order.totalAmount.toLocaleString('en-IN')}</p>
                 </TableCell>
+
                 <TableCell onClick={(e) => e.stopPropagation()}>
-                  <Select
-                    value={order.technicianId?.toString() || ""}
-                    onValueChange={(value) => handleAssignProfessional(order.id, value)}
-                  >
-                    <SelectTrigger className="w-[160px] bg-secondary/50">
-                      <SelectValue placeholder="Assign">
-                        {order.technicianId && (
-                          <span className="flex items-center gap-2">
-                            <UserCheck className="w-3.5 h-3.5 text-success" />
-                            Tech #{order.technicianId}
-                          </span>
-                        )}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {professionals.map((prof) => (
-                        <SelectItem key={prof} value={prof}>
-                          {prof}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <StatusBadge status={order.paymentStatus} />
                 </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
-                  <Select
-                    value={order.status.toLowerCase()}
-                    onValueChange={(value) => handleStatusChange(order.id, value)}
-                  >
-                    <SelectTrigger className="w-[120px] bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="created">Created</SelectItem>
-                      <SelectItem value="assigned">Assigned</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <StatusBadge status={order.status} />
                 </TableCell>
                 <TableCell className="text-right">
                   <motion.button

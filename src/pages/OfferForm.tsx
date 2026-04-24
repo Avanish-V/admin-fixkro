@@ -34,7 +34,7 @@ const OfferForm = () => {
   const [products, setProducts] = useState<ProductResponse[]>([]);
 
   const [formData, setFormData] = useState<any>({
-    couponCode: "",
+    offerCode: "",
     shortDescription: "",
     targetType: "ALL", // "ALL", "CATEGORY", "PRODUCT"
     categoryId: "all",
@@ -67,7 +67,7 @@ const OfferForm = () => {
         else if (offer.categoryId) targetType = "CATEGORY";
 
         setFormData({
-          couponCode: offer.couponCode,
+          offerCode: offer.offerCode,
           shortDescription: offer.shortDescription || "",
           targetType: targetType,
           categoryId: offer.categoryId?.toString() || "all",
@@ -107,8 +107,8 @@ const OfferForm = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.couponCode) {
-      toast({ title: "Error", description: "Coupon code is required", variant: "destructive" });
+    if (!formData.offerCode) {
+      toast({ title: "Error", description: "Offer Code is required", variant: "destructive" });
       return;
     }
 
@@ -166,7 +166,7 @@ const OfferForm = () => {
     <AdminLayout>
       <PageHeader
         title={isEditing ? "Edit Offer" : "Create New Offer"}
-        description={isEditing ? "Update the offer details" : "Create a new discount offer or coupon code"}
+        description={isEditing ? "Update the offer details" : "Create a new discount offer or Offer Code"}
       />
 
       <motion.div
@@ -191,20 +191,20 @@ const OfferForm = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <Tag className="w-5 h-5 text-primary" />
-                Coupon Details
+                Offer Details
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="couponCode">Coupon Code *</Label>
+                  <Label htmlFor="offerCode">Offer Code *</Label>
                   <Input
-                    id="couponCode"
+                    id="offerCode"
                     placeholder="e.g., SAVE20"
-                    value={formData.couponCode}
-                    onChange={(e) => setFormData({ ...formData, couponCode: e.target.value.toUpperCase() })}
+                    value={formData.offerCode}
+                    onChange={(e) => setFormData({ ...formData, offerCode: e.target.value.toUpperCase() })}
                     className="bg-secondary/50 font-mono text-lg tracking-wider"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Use uppercase letters and numbers for coupon codes
+                    Use uppercase letters and numbers for Offer Codes
                   </p>
                 </div>
 
@@ -446,7 +446,7 @@ const OfferForm = () => {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <code className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-mono text-xl font-bold tracking-wider">
-                    {formData.couponCode || "COUPONCODE"}
+                    {formData.offerCode || "offerCode"}
                   </code>
                   <span className="text-2xl font-bold text-foreground">
                     {formData.discountType === "PERCENTAGE"

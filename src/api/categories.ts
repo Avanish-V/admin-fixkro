@@ -29,19 +29,19 @@ export const fetchCategories = async (): Promise<CategoryResponse[]> => {
 };
 
 export const createCategory = async (data: CreateCategoryRequest): Promise<CategoryResponse> => {
-  const { ok, data: resData } = await apiClient.post("/category", data);
+  const { ok, data: resData } = await apiClient.post("/admin/category", data);
   if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create category");
   return resData.data;
 };
 
 export const updateCategory = async (categoryId: number, data: CreateCategoryRequest): Promise<CategoryResponse> => {
-  const { ok, data: resData } = await apiClient.put(`/category/${categoryId}`, data);
+  const { ok, data: resData } = await apiClient.put(`/admin/category/${categoryId}`, data);
   if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update category");
   return resData.data;
 };
 
 export const deleteCategory = async (categoryId: number): Promise<void> => {
-  const { ok, data } = await apiClient.delete(`/category/${categoryId}`);
+  const { ok, data } = await apiClient.delete(`/admin/category/${categoryId}`);
   if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete category");
 };
 

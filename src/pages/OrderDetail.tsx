@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -145,7 +146,7 @@ const OrderDetail = () => {
             </motion.button>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-foreground">{order.orderId}</h1>
+                <h1 className="text-2xl font-bold text-foreground">#{order.orderId}</h1>
                 <StatusBadge status={order.status.toLowerCase() as any} />
                 <span className={`px-2 py-0.5 rounded text-xs font-medium bg-info/20 text-info`}>
                   {order.applianceBrand || "Service"}
@@ -154,35 +155,92 @@ const OrderDetail = () => {
               <p className="text-muted-foreground">Order placed on {new Date(order.createdAt).toLocaleString()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Select
-              value={order.status.toUpperCase()}
-              onValueChange={(val) => statusMutation.mutate(val)}
-            >
-              <SelectTrigger className="w-[160px] bg-secondary/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CREATED">Created</SelectItem>
-                <SelectItem value="ASSIGNED">Assigned</SelectItem>
-                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {order.status !== "CANCELLED" && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  const reason = window.prompt("Enter cancellation reason:");
-                  if (reason !== null) cancelMutation.mutate(reason);
-                }}
-              >
-                <XCircle className="w-4 h-4 mr-2" /> Cancel
-              </Button>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1">
+              <StatusBadge status={order.paymentStatus} label={`Payment: ${order.paymentStatus}`} />
+              <StatusBadge status={order.status} />
+            </div>
+            
+            {order.status.toUpperCase() !== "CANCELLED" && 
+             order.status.toUpperCase() !== "CANCELLED_BY_USER" && 
+             order.status.toUpperCase() !== "FAILED" && 
+             order.status.toUpperCase() !== "COMPLETED" && (
+              <div className="flex items-center gap-3 mt-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    const reason = window.prompt("Enter cancellation reason:");
+                    if (reason !== null) cancelMutation.mutate(reason);
+                  }}
+                >
+                  <XCircle className="w-4 h-4 mr-2" /> Cancel Order
+                </Button>
+              </div>
             )}
           </div>
+        </div>
+
+        {/* Progress Stepper */}
+        <div className="glass-card p-8 mb-8">
+          <div className="relative flex justify-between">
+            {/* Progress Lines */}
+            <div className="absolute top-5 left-0 w-full h-1 bg-secondary/50 -z-10" />
+            <div 
+              className="absolute top-5 left-0 h-1 bg-primary transition-all duration-500 -z-10" 
+              style={{ 
+                width: 
+                  order.status.toUpperCase() === "COMPLETED" ? "100%" :
+                  order.status.toUpperCase() === "IN_PROGRESS" ? "66%" :
+                  order.status.toUpperCase() === "ASSIGNED" ? "33%" : "0%"
+              }}
+            />
+
+            {[
+              { id: "CREATED", label: "Created", icon: Package },
+              { id: "ASSIGNED", label: "Assigned", icon: UserCheck },
+              { id: "IN_PROGRESS", label: "In Progress", icon: Loader2 },
+              { id: "COMPLETED", label: "Completed", icon: CheckCircle2 },
+            ].map((step, idx) => {
+              const Icon = step.icon;
+              const isCompleted = ["CREATED", "ASSIGNED", "IN_PROGRESS", "COMPLETED"].indexOf(order.status.toUpperCase()) >= idx || order.status.toUpperCase() === "COMPLETED";
+              const isActive = order.status.toUpperCase() === step.id;
+
+              return (
+                <div key={step.id} className="flex flex-col items-center gap-2">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                    isCompleted ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-secondary text-muted-foreground",
+                    isActive && "ring-4 ring-primary/20 scale-110"
+                  )}>
+                    <Icon className={cn("w-5 h-5", isActive && "animate-pulse")} />
+                  </div>
+                  <span className={cn(
+                    "text-xs font-bold uppercase tracking-wider",
+                    isCompleted ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {step.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {(order.status.toUpperCase() === "CANCELLED" || order.status.toUpperCase() === "CANCELLED_BY_USER" || order.status.toUpperCase() === "FAILED") && (
+            <div className="mt-8 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center">
+                <XCircle className="w-6 h-6 text-destructive" />
+              </div>
+              <div>
+                <h4 className="font-bold text-destructive uppercase tracking-tight">
+                  Order {order.status === "CANCELLED_BY_USER" ? "Cancelled by User" : order.status}
+                </h4>
+                <p className="text-sm text-destructive/80 font-medium">
+                  {order.status === "FAILED" ? "Transaction failed during processing." : (order.cancellationReason || "The order was cancelled.")}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -261,16 +319,16 @@ const OrderDetail = () => {
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex flex-col">
                         <span className="text-muted-foreground">Discount Applied</span>
-                        {order.couponCode && (
+                        {order.offerCode && (
                           <span className="text-[10px] text-success font-mono uppercase tracking-wider">
-                            Code: {order.couponCode}
+                            Code: {order.offerCode}
                           </span>
                         )}
                       </div>
                       <span className="font-medium text-success">-₹{order.discount.toLocaleString('en-IN')}</span>
                     </div>
                   )}
-                  {order.offerId && !order.couponCode && (
+                  {order.offerId && !order.offerCode && (
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-muted-foreground">Offer ID</span>
                       <span className="font-mono text-muted-foreground">{order.offerId}</span>
@@ -315,7 +373,7 @@ const OrderDetail = () => {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-secondary/30">
                   <p className="text-sm text-muted-foreground mb-1">Business Order ID</p>
-                  <p className="font-mono text-sm font-medium text-foreground truncate" title={order.orderId}>{order.orderId}</p>
+                   <p className="font-mono text-sm font-medium text-foreground truncate" title={order.orderId}>#{order.orderId}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-secondary/30">
                   <p className="text-sm text-muted-foreground mb-1">Payment Mode</p>

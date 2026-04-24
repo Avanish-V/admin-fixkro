@@ -27,16 +27,32 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardStats } from "@/api/dashboard";
-import { OrderResponse } from "@/api/orders";
+import { fetchAllOrders, OrderResponse } from "@/api/orders";
 
 const Dashboard = () => {
-  const { data: stats, isLoading, error } = useQuery({
+  const { data: stats, isLoading: isStatsLoading, error: statsError } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: fetchDashboardStats,
   });
 
+  const { data: allOrders = [], isLoading: isOrdersLoading } = useQuery({
+    queryKey: ["all-orders"],
+    queryFn: fetchAllOrders,
+  });
+
+  const isLoading = isStatsLoading || isOrdersLoading;
+  const error = statsError;
+
+  const completedOrdersList = allOrders.filter(order => order.status.toUpperCase() === "COMPLETED");
+  const totalCompletedOrders = completedOrdersList.length;
+  const totalCompletedRevenue = completedOrdersList.reduce((sum, order) => sum + order.totalAmount, 0);
+
   const orderColumns = [
-    { key: "orderId", header: "Order ID" },
+    { 
+      key: "orderId", 
+      header: "Order ID",
+      render: (item: OrderResponse) => <span className="font-bold">#{item.orderId.slice(-8).toUpperCase()}</span>
+    },
     {
       key: "serviceAddress",
       header: "Customer",
@@ -90,16 +106,16 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatsCard
-            title="Total Orders"
-            value={stats.totalOrders.toLocaleString()}
+            title="Completed Orders"
+            value={totalCompletedOrders.toLocaleString()}
             change={stats.growthRate + " from last month"}
             changeType="positive"
-            icon={ShoppingCart}
+            icon={CheckCircle2}
             delay={0}
           />
           <StatsCard
-            title="Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
+            title="Completed Revenue"
+            value={`₹${totalCompletedRevenue.toLocaleString('en-IN')}`}
             change="+8.2% from last month"
             changeType="positive"
             icon={DollarSign}

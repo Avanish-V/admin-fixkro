@@ -26,7 +26,7 @@ export interface OrderResponse {
     price: number;
     tax: number;
     offerId?: number;
-    couponCode?: string;
+    offerCode?: string;
     discount?: number;
     totalAmount: number;
     status: string;
@@ -40,7 +40,7 @@ export interface OrderResponse {
 }
 
 export const fetchAllOrders = async (): Promise<OrderResponse[]> => {
-    const { ok, data } = await apiClient.get("/order/all");
+    const { ok, data } = await apiClient.get("/admin/order/all");
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch orders");
     return data.data || [];
 };
@@ -73,7 +73,7 @@ export const assignTechnician = async (orderId: number, technicianId: number): P
 };
 
 export const unassignTechnician = async (orderId: number): Promise<OrderResponse> => {
-    const { ok, data } = await apiClient.post(`/order/${orderId}/unassign-technician`, {});
+    const { ok, data } = await apiClient.post(`/admin/order/${orderId}/unassign-technician`, {});
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to unassign technician");
     return data.data;
 };

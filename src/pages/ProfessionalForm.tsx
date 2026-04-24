@@ -31,8 +31,7 @@ const ProfessionalForm = () => {
     address: "",
     expertise: "",
     photo: "",
-    aadharCard: "",
-    idPhoto: ""
+    aadhar: ""
   });
 
   useEffect(() => {
@@ -52,8 +51,7 @@ const ProfessionalForm = () => {
         address: professional.address,
         expertise: professional.expertise.join(", "),
         photo: professional.photo,
-        aadharCard: professional.aadharCard,
-        idPhoto: professional.idPhoto
+        aadhar: professional.aadhar
       });
     } catch (error) {
       toast({ title: "Error", description: "Failed to load professional details", variant: "destructive" });
@@ -127,24 +125,18 @@ const ProfessionalForm = () => {
         </div>
 
         <div className="glass-card p-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ImageUpload
               label="Profile Photo *"
-              folder="professionals/photos"
+              folder="professionals/profiles"
               value={formData.photo}
               onChange={(url) => setFormData(prev => ({ ...prev, photo: url }))}
             />
             <ImageUpload
               label="Aadhar Card"
-              folder="professionals/aadhar"
-              value={formData.aadharCard}
-              onChange={(url) => setFormData(prev => ({ ...prev, aadharCard: url }))}
-            />
-            <ImageUpload
-              label="ID Photo"
-              folder="professionals/id-photos"
-              value={formData.idPhoto}
-              onChange={(url) => setFormData(prev => ({ ...prev, idPhoto: url }))}
+              folder="documents/aadhar"
+              value={formData.aadhar}
+              onChange={(url) => setFormData(prev => ({ ...prev, aadhar: url }))}
             />
           </div>
 

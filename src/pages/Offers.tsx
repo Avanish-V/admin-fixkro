@@ -80,23 +80,23 @@ const Offers = () => {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    toast({ title: "Copied!", description: `Coupon code "${code}" copied to clipboard` });
+    toast({ title: "Copied!", description: `Offer code "${code}" copied to clipboard` });
   };
 
   const columns = [
     {
-      key: "couponCode",
-      header: "Coupon / Offer",
+      key: "offerCode",
+      header: "Offer / Coupon",
       render: (item: Offer) => (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <code className="px-2 py-1 rounded bg-primary/10 text-primary font-mono text-sm">
-              {item.couponCode}
+              {item.offerCode}
             </code>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => copyCode(item.couponCode)}
+              onClick={() => copyCode(item.offerCode)}
               className="text-muted-foreground hover:text-foreground"
             >
               <Copy className="w-4 h-4" />
@@ -216,8 +216,8 @@ const Offers = () => {
   return (
     <AdminLayout>
       <PageHeader
-        title="Offers & Coupons"
-        description="Manage discount offers and coupon codes"
+        title="Offers"
+        description="Manage discount offers"
         action={{ label: "Add Offer", onClick: handleCreate }}
       />
 

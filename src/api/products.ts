@@ -41,7 +41,7 @@ export const fetchProductsByCategory = async (categoryId: number, status?: strin
 };
 
 export const fetchAllProducts = async (status?: string): Promise<ProductResponse[]> => {
-    let url = "/services/all";
+    let url = "/admin/services/all";
     if (status) url += `?status=${status}`;
     const { ok, data } = await apiClient.get(url);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch all products");
@@ -55,18 +55,18 @@ export const createProduct = async (data: CreateProductRequest): Promise<Product
 };
 
 export const updateProduct = async (productId: number, data: UpdateProductRequest): Promise<ProductResponse> => {
-    const { ok, data: resData } = await apiClient.put(`/product/${productId}`, data);
+    const { ok, data: resData } = await apiClient.put(`/admin/product/${productId}`, data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update product");
     return resData.data;
 };
 
 export const deleteProduct = async (productId: number): Promise<void> => {
-    const { ok, data } = await apiClient.delete(`/product/${productId}`);
+    const { ok, data } = await apiClient.delete(`/admin/product/${productId}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete product");
 };
 
 export const toggleProductStatus = async (productId: number, status: boolean): Promise<ProductResponse> => {
-    const { ok, data } = await apiClient.patch(`/product/${productId}/status?status=${status}`, {});
+    const { ok, data } = await apiClient.patch(`/admin/product/${productId}/status?status=${status}`, {});
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to toggle status");
     return data.data;
 };

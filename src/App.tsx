@@ -21,6 +21,7 @@ import Cities from "./pages/Cities";
 import Reviews from "./pages/Reviews";
 import Users from "./pages/Users";
 import Parts from "./pages/Parts";
+import Withdrawals from "./pages/Withdrawals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/users" element={<Users />} />
           <Route path="/parts" element={<Parts />} />
+          <Route path="/withdrawals" element={<Withdrawals />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

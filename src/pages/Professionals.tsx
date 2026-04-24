@@ -91,8 +91,7 @@ const Professionals = () => {
         mobile: professional.mobile,
         address: professional.address,
         expertise: professional.expertise,
-        aadharCard: professional.aadharCard,
-        idPhoto: professional.idPhoto,
+        aadhar: professional.aadhar,
         status: newStatus
       });
       setProfessionals(professionals.map(p =>
@@ -133,7 +132,6 @@ const Professionals = () => {
                 <TableHead className="text-muted-foreground font-semibold">Professional</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Contact</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Expertise</TableHead>
-                <TableHead className="text-muted-foreground font-semibold">Stats</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Documents</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
                 <TableHead className="text-muted-foreground font-semibold text-right">Actions</TableHead>
@@ -142,7 +140,7 @@ const Professionals = () => {
             <TableBody>
               {professionals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                     No professionals found
                   </TableCell>
                 </TableRow>
@@ -204,21 +202,9 @@ const Professionals = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Award className="w-3.5 h-3.5 text-warning" />
-                          <span className="font-medium">{(professional.rating ?? 0).toFixed(1)}</span>
-                        </div>
-                        <p className="text-muted-foreground">{professional.completedJobs} jobs</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
                       <div className="flex flex-col gap-1">
-                        <span className={`text-xs ${professional.aadharCard ? "text-success" : "text-warning"}`}>
-                          Aadhar: {professional.aadharCard ? "Uploaded" : "Pending"}
-                        </span>
-                        <span className={`text-xs ${professional.idPhoto ? "text-success" : "text-warning"}`}>
-                          ID Photo: {professional.idPhoto ? "Uploaded" : "Pending"}
+                        <span className={`text-xs ${professional.aadhar ? "text-success" : "text-warning"}`}>
+                          Aadhar: {professional.aadhar ? "Uploaded" : "Pending"}
                         </span>
                       </div>
                     </TableCell>

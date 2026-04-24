@@ -8,11 +8,8 @@ export interface ProfessionalResponse {
     mobile: string;
     address: string;
     expertise: string[];
-    aadharCard: string;
-    idPhoto: string;
+    aadhar: string;
     status: string;
-    completedJobs: number;
-    rating: number;
 }
 
 export interface CreateProfessionalRequest {
@@ -22,8 +19,7 @@ export interface CreateProfessionalRequest {
     mobile: string;
     address: string;
     expertise: string[];
-    aadharCard: string;
-    idPhoto: string;
+    aadhar: string;
 }
 
 export interface UpdateProfessionalRequest {
@@ -33,43 +29,42 @@ export interface UpdateProfessionalRequest {
     mobile: string;
     address: string;
     expertise: string[];
-    aadharCard: string;
-    idPhoto: string;
+    aadhar: string;
     status: string;
 }
 
 export const fetchProfessionals = async (): Promise<ProfessionalResponse[]> => {
-    const { ok, data } = await apiClient.get("/professionals");
+    const { ok, data } = await apiClient.get("/admin/professionals");
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch professionals");
     return data.data || [];
 };
 
 export const fetchProfessionalById = async (id: number): Promise<ProfessionalResponse> => {
-    const { ok, data } = await apiClient.get(`/professionals/${id}`);
+    const { ok, data } = await apiClient.get(`/admin/professionals/${id}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to fetch professional");
     return data.data;
 };
 
 export const searchProfessionals = async (query: string): Promise<ProfessionalResponse[]> => {
-    const { ok, data } = await apiClient.get(`/professionals/search?query=${query}`);
+    const { ok, data } = await apiClient.get(`/admin/professionals/search?query=${query}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to search professionals");
     return data.data || [];
 };
 
 export const createProfessional = async (data: CreateProfessionalRequest): Promise<ProfessionalResponse> => {
-    const { ok, data: resData } = await apiClient.post("/professionals", data);
+    const { ok, data: resData } = await apiClient.post("/admin/professionals", data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create professional");
     return resData.data;
 };
 
 export const updateProfessional = async (id: number, data: UpdateProfessionalRequest): Promise<ProfessionalResponse> => {
-    const { ok, data: resData } = await apiClient.put(`/professionals/${id}`, data);
+    const { ok, data: resData } = await apiClient.put(`/admin/professionals/${id}`, data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to update professional");
     return resData.data;
 };
 
 export const deleteProfessional = async (id: number): Promise<void> => {
-    const { ok, data } = await apiClient.delete(`/professionals/${id}`);
+    const { ok, data } = await apiClient.delete(`/admin/professionals/${id}`);
     if (!ok || !data.success) throw new Error(data.error?.message || "Failed to delete professional");
 };
 
