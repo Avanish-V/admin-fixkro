@@ -49,7 +49,7 @@ export const fetchAllProducts = async (status?: string): Promise<ProductResponse
 };
 
 export const createProduct = async (data: CreateProductRequest): Promise<ProductResponse> => {
-    const { ok, data: resData } = await apiClient.post("/service", data);
+    const { ok, data: resData } = await apiClient.post("/admin/service", data);
     if (!ok || !resData.success) throw new Error(resData.error?.message || "Failed to create product");
     return resData.data;
 };

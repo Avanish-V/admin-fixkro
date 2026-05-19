@@ -84,27 +84,16 @@ export const AdminSidebar = () => {
       {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <motion.div
-            className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20"
+          <motion.img
+            src="/icon.png"
+            alt="FixKro logo"
+            className={cn(
+              "rounded-xl object-contain shadow-lg shadow-primary/20 transition-all duration-300",
+              collapsed ? "w-10 h-10" : "w-full h-auto max-w-[200px] mb-2"
+            )}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-white font-black text-sm">FK</span>
-          </motion.div>
-          <AnimatePresence mode="wait">
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center"
-              >
-                <span className="text-xl font-black text-primary">Fix</span>
-                <span className="text-xl font-black text-[#FFB300]">Kro</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          />
         </Link>
       </div>
 
